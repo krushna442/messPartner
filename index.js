@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import vendorRoute from './routes/vendor_register.js';
 import client_registerRoute from './routes/client_register.js';
+import dotenv from 'dotenv';
 
 
 
