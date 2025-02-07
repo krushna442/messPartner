@@ -83,7 +83,7 @@ const vendorSchema =new mongoose.Schema({
 
 
 // login section starts here
-router.post("/login", async (req, res) => {
+router.post("/vendorlogin", async (req, res) => {
     const { email, password } = req.body;
     const Vendordata = await Vendor.findOne({ email: email });
     if (!Vendordata) {
@@ -111,7 +111,7 @@ router.post("/login", async (req, res) => {
 
 
 // logout section 
-router.get("/logout", (req, res) => {
+router.get("/vendorlogout", (req, res) => {
     res.clearCookie("token");
     res.status(200).json({ message: "Logged out successfully" });
 });
