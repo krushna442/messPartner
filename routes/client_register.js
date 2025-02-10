@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import dotenv from "dotenv";
+dotenv.config();
 const router = express.Router();
 
 router.use(cookieParser());
@@ -23,9 +25,8 @@ const isAuthenticated = (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, "krushna");
+    const decoded = jwt.verify(token, process.env.JWTSECREAT);
     req.user = decoded;
-    console.log(decoded);
     next();
   } catch (error) {
     return res.status(403).json({ message: "Invalid token" });
@@ -52,15 +53,15 @@ router.post("/register", async (req, res) => {
   try {
     const { name, email, number, password,address } = req.body;
 
-    const lastClient = await Client.findOne({}, { user_id: 1 }).sort({ user_id: -1 });
+    const lastClient = await Client.findOne({}, { user_id: 1 }).sort({ _id: -1 });
 
-    let newUserId;
-    if (lastClient && lastClient.user_id) {
-      const lastNum = parseInt(lastClient.user_id.replace("RARSI-c-", ""), 10);
-      newUserId = `RARSI-c-${lastNum + 1}`;
-    } else {
-      newUserId = "RARSI-c-1";
-    }
+let newUserId;
+if (lastClient && lastClient.user_id) {
+  const lastNum = parseInt(lastClient.user_id.split("-").pop(), 10);
+  newUserId = `RARSI-c-${lastNum + 1}`;
+} else {
+  newUserId = "RARSI-c-1";
+}
 
     const newClient = new Client({
       user_id: newUserId,
@@ -74,19 +75,16 @@ router.post("/register", async (req, res) => {
     await newClient.save();
     res.status(201).json({ message: "User created", user_id: newUserId });
   } catch (error) {
-    console.error("Error:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
   }
 });
 
 // Login User
 router.post("/login", async (req, res) => {
   try {
-    console.log(req.body); 
     const { email, password } = req.body;
     const userdata = await Client.findOne({ email:email});
-    console.log(userdata);
-    console.log(userdata);
+    
 
     if (!userdata) {
       return res.status(401).json({ message: "Unauthorized: Invalid email" });
@@ -95,7 +93,7 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Unauthorized: Invalid password" });
     }
 
-    const token = jwt.sign({ _id: userdata._id }, "krushna");
+    const token = jwt.sign({ _id: userdata._id },process.env.JWTSECREAT);
 
     res.cookie("token", token, {
       httpOnly: true,
@@ -104,7 +102,7 @@ router.post("/login", async (req, res) => {
 
     res.status(200).json({ message: "Successfully logged in" });
   } catch (error) {
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ error: "Internal Server Error",error });
   }
 });
 

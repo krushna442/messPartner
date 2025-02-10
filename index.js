@@ -3,7 +3,9 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import vendorRoute from './routes/vendor_register.js';
 import client_registerRoute from './routes/client_register.js';
-import dotenv from 'dotenv';
+import ExcelRoute from './routes/importExcel.js';
+import dotenv, { config } from 'dotenv';
+config();
 
 
 
@@ -17,14 +19,15 @@ app.use(express.urlencoded({ extended: true }));
 
 
 // MongoDB Connection
-const uri = "mongodb+srv://krushnch442:Krushna72@cluster0.d1dmm.mongodb.net/krushna?retryWrites=true&w=majority";
+const uri = process.env.URI;
 mongoose.connect(uri)
 .then(() => console.log("Connected to database"))
     .catch(err => console.error("Database connection error:", err));
     
     // API Routes
     app.use('/api', vendorRoute);
-    app.use('/api',client_registerRoute)
+    app.use('/api/vendor',client_registerRoute)
+    app.use('/api/email',ExcelRoute)
   
     
     // Start Server
