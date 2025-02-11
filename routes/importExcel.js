@@ -21,8 +21,8 @@ router.use(cors());
 const transporter = createTransport({
   service: "gmail",
   auth: {
-  user: "krushnch442@gmail.com",
-    pass: "vdgu pbsu qwjw fivl"
+  user: "dncrkohinoor@gmail.com",
+    pass: "diyb vghp nqxm rtdt"
   },
 });
 
