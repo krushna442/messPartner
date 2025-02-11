@@ -2,7 +2,8 @@ import express, { urlencoded } from 'express';
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 import cookieParser from "cookie-parser";
-import { string } from '@tensorflow/tfjs-core';
+import Vendor from '../models/Vendor.js'; // Make sure to import the Vendor model
+
 const router = express.Router();
 router.use(cookieParser());
 
@@ -33,46 +34,46 @@ router.post("/home",isauthenticated,(req,res)=>{
 })
 
 
-const vendorSchema =new mongoose.Schema({
-    Vendor_id:{type:String ,required:true,unique:true},
-    name: { type: String, required: true},
-    email: { type: String, required: true ,unique:true },
-    number: { type: String, required: true ,unique:true },
-    password: { type: String, required: true ,unique:true }
-    });
-    const Vendor = mongoose.model("Vendor", vendorSchema);
-
     // Register Vendor
     router.post("/register", async (req, res) => {
-      try {
-          const { name, email, number, password } = req.body;
-  
-          // Fetch the last vendor ID in descending order
-          const lastvendor = await Vendor.findOne().sort({ Vendor_id: -1 });
-  
-          let newVendorId;
-          if (lastvendor && lastvendor.Vendor_id) {
-              const lastNum = parseInt(lastvendor.Vendor_id.split("-").pop(), 10);
-              newVendorId = `RARSI-v-${lastNum + 1}`;
-          } else {
-              newVendorId = "RARSI-v-1";
-          }
-  
-          const newvendor = new Vendor({
-              Vendor_id: newVendorId,
-              name,
-              email,
-              number,
-              password,
-          });
-  
-          await newvendor.save();
-          res.status(201).json({ message: "Vendor created", Vendor_id: newVendorId });
-      } catch (error) {
-          console.error("Error:", error);
-          res.status(500).json({ error: "Internal Server Error" });
-      }
-  });
+        try {
+            const { name, email, number, password, service } = req.body;
+    
+            // Fetch the last vendor in descending order by `Vendor_id`
+            const lastVendor = await Vendor.findOne({}, {Vendor_id: 1 }).sort({ _id: -1 });
+    
+            let newVendorId;
+            if (lastVendor && lastVendor.Vendor_id) {
+                const lastNum = parseInt(lastVendor.Vendor_id.split("-").pop(), 10);
+                newVendorId = `RARSI-v-${lastNum + 1}`;
+            } else {
+                newVendorId = "RARSI-v-1";
+            }
+    
+            // Check if the vendor already exists with email or number
+            const existingVendor = await Vendor.findOne({ $or: [{ email }, { number }] });
+            if (existingVendor) {
+                return res.status(400).json({ message: "Vendor already exists with this email or number" });
+            }
+    
+            const newvendor = new Vendor({
+                Vendor_id: newVendorId,
+                name,
+                email,
+                number,
+                password,
+                service
+            });
+    
+            await newvendor.save();
+            res.status(201).json({ message: "Vendor created", Vendor_id: newVendorId });
+    
+        } catch (error) {
+            console.error("Error:", error);
+            res.status(500).json({ error: "Internal Server Error" });
+        }
+    });
+    
   
 
 
