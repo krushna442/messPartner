@@ -32,7 +32,7 @@ function sendMail({ subject, email, message }) {
       from: process.env.EMAIL_USER,
       to: email,
       subject: subject,
-      text: `Email: ${email}\nMessage: ${message}`,
+      text: `${message}`,
     };
 
     transporter.sendMail(mailOptions, (err, info) => {
