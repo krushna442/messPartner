@@ -5,7 +5,6 @@ import cookieParser from "cookie-parser";
 import Vendor from "../models/Vendor.js"; // Make sure to import the Vendor model
 import multer from "multer";
 
-
 const router = express.Router();
 router.use(cookieParser());
 
@@ -14,7 +13,6 @@ const upload = multer({ storage: storage });
 
 router.use(express.json());
 router.use(express.urlencoded({ extended: true }));
-
 
 const isauthenticated = (req, res, next) => {
   const token = req.cookies.token;
@@ -41,14 +39,12 @@ router.post("/home", isauthenticated, async (req, res) => {
 
 // Register Vendor
 router.post("/register", upload.single("image"), async (req, res) => {
-  console.log("Request Body:", req.body); // Debugging
-  console.log("Uploaded File:", req.file); // Debugging
 
   if (!req.file) {
     return res.status(400).json({ message: "No file uploaded" });
   }
   try {
-    const { name, email, number, password, service } = req.body;
+    const { name, email, number, password, service, address,subscriptiontype,mealtype,contactmobile,whatsapp} = req.body;
     // const photopath = req.file?req.file.path:null;
     const photoBase64 = req.file ? req.file.buffer.toString("base64") : null;
 
@@ -84,6 +80,11 @@ router.post("/register", upload.single("image"), async (req, res) => {
       password,
       service,
       photo: photoBase64,
+      address,
+      subscriptiontype,
+      mealtype,
+      contactmobile,
+      whatsapp
     });
 
     await newvendor.save();
@@ -97,37 +98,43 @@ router.post("/register", upload.single("image"), async (req, res) => {
 // login section starts here
 router.post("/login", async (req, res) => {
   try {
-      const { number, password } = req.body;
-      const Vendordata = await Vendor.findOne({ number: number });
-      if (!Vendordata) {
-          return res.status(401).json({ message: "Unauthorized: Invalid number" });
-      }
-      if (Vendordata.password !== password) {
-          return res.status(401).json({ message: "Unauthorized: Invalid password" });
-      }
+    const { number, password } = req.body;
+    const Vendordata = await Vendor.findOne({ number: number });
+    if (!Vendordata) {
+      return res.status(401).json({ message: "Unauthorized: Invalid number" });
+    }
+    if (Vendordata.password !== password) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: Invalid password" });
+    }
 
-      const token = jwt.sign({
-          _id: Vendordata._id,
-          Vendor_id: Vendordata.Vendor_id
-      }, "krushna");
+    const token = jwt.sign(
+      {
+        _id: Vendordata._id,
+        Vendor_id: Vendordata.Vendor_id,
+      },
+      "krushna"
+    );
 
-      res.cookie("token", token, {
-        httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000,
-        sameSite: 'lax',  // Changed from 'strict' to 'lax' for better compatibility
-        path: '/'
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "None",
+      path: "/",
+      maxAge: 24 * 60 * 60 * 1000,
     });
 
-      res.status(200).json({ 
-          message: "Successfully logged in",
-          vendor: {
-              id: Vendordata.Vendor_id,
-              name: Vendordata.name
-          }
-      });
+    res.status(200).json({
+      message: "Successfully logged in",
+      vendor: {
+        id: Vendordata.Vendor_id,
+        name: Vendordata.name,
+      },
+    });
   } catch (error) {
-      console.error("Login error:", error);
-      res.status(500).json({ message: "Internal server error" });
+    console.error("Login error:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
