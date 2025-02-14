@@ -112,26 +112,6 @@ router.get("/logout", (req, res) => {
   res.status(200).json({ message: "Logged out successfully" });
 });
 
-// Meal Off Option
-router.post("/mealOff", async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    const updatedClient = await Client.findOneAndUpdate(
-      { email },
-      { $set: { meal: "no" } },
-      { new: true }
-    );
-
-    if (!updatedClient) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    res.json({ message: "Meal option updated", user: updatedClient });
-  } catch (error) {
-    res.status(500).json({ error: "Error updating meal option", details: error.message });
-  }
-});
 
 // Start Server
 export default router;

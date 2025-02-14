@@ -45,8 +45,8 @@ router.post("/register", upload.single("image"), async (req, res) => {
   }
   try {
     const { name, email, number, password, service, address,subscriptiontype,mealtype,contactmobile,whatsapp} = req.body;
-    // const photopath = req.file?req.file.path:null;
-    const photoBase64 = req.file ? req.file.buffer.toString("base64") : null;
+    // const imagepath = req.file?req.file.path:null;
+    const imageBase64 = req.file ? req.file.buffer.toString("base64") : null;
 
     // Fetch the last vendor in descending order by `Vendor_id`
 
@@ -79,7 +79,7 @@ router.post("/register", upload.single("image"), async (req, res) => {
       number,
       password,
       service,
-      photo: photoBase64,
+      image: imageBase64,
       address,
       subscriptiontype,
       mealtype,

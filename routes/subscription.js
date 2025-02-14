@@ -1,0 +1,76 @@
+import express from 'express';
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+import Subscriber from '../models/subscriber.js';
+const router = express.Router();
+dotenv.config();
+
+
+
+router.post('/subscribtion', async(req,res)=>{
+   const {user_id,Vendor_id,subscriptionType,mealType,totalMeal}=req.body;
+try{
+
+    const subscriber = new Subscriber({
+        clientId: user_id,
+        Vendor_id: Vendor_id,
+        subscriptionId:user_id+Vendor_id,
+        subscriptionType:subscriptionType,
+        mealType:mealType,
+        subscriptionDate:Date.now(),
+        totalMeal:totalMeal, 
+    });
+  await  subscriber.save();
+    res.status(201).json({message: "Subscribed successfully"});
+}catch (err){
+    console.log(err);
+    res.status(400).json({message: "Failed to subscribe"});
+}
+
+    
+});
+
+router.post('/mealcount', async (req, res) => {
+    try {
+        const { Vendor_id } = req.body;
+        if (!Vendor_id) {
+            return res.status(400).json({ error: "Vendor_id is required" });
+        }
+        const todayMeals = await Subscriber.find({
+            Vendor_id: Vendor_id, 
+            mealOption: "yes"
+        });
+
+        
+
+        res.json({todayMeals }); // Return meal count & documents
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+router.post("/mealOff", async (req, res) => {
+  try {
+      const { user_id } = req.body;
+
+      // Find the user first
+      const subscriber = await Subscriber.findOne({ clientId: user_id });
+
+      if (!subscriber) {
+          return res.status(404).json({ error: "User not found" });
+      }
+
+      // Toggle mealOption (true ↔ false)
+      const updatedClient = await Subscriber.findOneAndUpdate(
+          { clientId: user_id },
+          { $set: { mealOption: !subscriber.mealOption } },  // ✅ Toggles true ↔ false
+          { new: true }  // ✅ Returns the updated document
+      );
+
+      res.json({ message: "Meal option toggled", user: updatedClient });
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Error updating meal option", details: error.message });
+  }
+});
