@@ -1,6 +1,5 @@
 import express from "express";
 import { createTransport } from "nodemailer";
-import cors from "cors";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import path from "path";
@@ -16,7 +15,7 @@ const router = express.Router();
 
 router.use(express.urlencoded({ extended: true }));
 router.use(express.json({ limit: "50mb" })); // Increase payload limit for large files
-router.use(cors());
+
 
 const transporter = createTransport({
   service: "gmail",
