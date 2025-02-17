@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
 import Vendor from "../models/Vendor.js"; // Make sure to import the Vendor model
 import multer from "multer";
+import isauthenticated from "../utils/authmiddlewware.js";
 
 const router = express.Router();
 router.use(cookieParser());
@@ -14,20 +15,20 @@ const upload = multer({ storage: storage });
 router.use(express.json());
 router.use(express.urlencoded({ extended: true }));
 
-const isauthenticated = (req, res, next) => {
-  const token = req.cookies.token;
-  if (!token) {
-    return res.status(401).json({ message: "login first" });
-  }
+// const isauthenticated = (req, res, next) => {
+//   const token = req.cookies.token;
+//   if (!token) {
+//     return res.status(401).json({ message: "login first" });
+//   }
 
-  try {
-    const decoded = jwt.verify(token, "krushna");
-    req.Vendor = decoded;
-    next();
-  } catch (error) {
-    return res.status(403).json({ message: "Invalid token" });
-  }
-};
+//   try {
+//     const decoded = jwt.verify(token, "krushna");
+//     req.Vendor = decoded;
+//     next();
+//   } catch (error) {
+//     return res.status(403).json({ message: "Invalid token" });
+//   }
+// };
 
 router.post("/home", isauthenticated, async (req, res) => {
   res.status(200).json({
@@ -40,12 +41,12 @@ router.post("/home", isauthenticated, async (req, res) => {
 // Register Vendor
 router.post("/register", upload.single("image"), async (req, res) => {
 
-  if (!req.file) {
-    return res.status(400).json({ message: "No file uploaded" });
-  }
   try {
     const { name, email, number, password, service, address,subscriptiontype,mealtype,contactmobile,whatsapp} = req.body;
     // const imagepath = req.file?req.file.path:null;
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
     const imageBase64 = req.file ? req.file.buffer.toString("base64") : null;
 
     // Fetch the last vendor in descending order by `Vendor_id`
@@ -78,7 +79,6 @@ router.post("/register", upload.single("image"), async (req, res) => {
       email,
       number,
       password,
-      service,
       image: imageBase64,
       address,
       subscriptiontype,
@@ -88,6 +88,21 @@ router.post("/register", upload.single("image"), async (req, res) => {
     });
 
     await newvendor.save();
+    const token = jwt.sign(
+      {
+        _id: newvendor._id,
+        Vendor_id: newvendor.Vendor_id,
+      },
+      process.env.JWTSECREAT
+    );
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "None",
+      path: "/",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
     res.status(201).json({ message: "Vendor created", Vendor_id: newVendorId });
   } catch (error) {
     console.error("Error:", error);
@@ -114,7 +129,7 @@ router.post("/login", async (req, res) => {
         _id: Vendordata._id,
         Vendor_id: Vendordata.Vendor_id,
       },
-      "krushna"
+      process.env.JWTSECREAT
     );
 
     res.cookie("token", token, {

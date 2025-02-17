@@ -8,25 +8,30 @@ dotenv.config();
 
 
 router.post('/subscribtion', async(req,res)=>{
-   const {user_id,Vendor_id,subscriptionType,mealType,totalMeal}=req.body;
-try{
+  const { user_id, Vendor_id, subscriptionType, mealType, totalMeal } = req.body;
 
-    const subscriber = new Subscriber({
-        clientId: user_id,
-        Vendor_id: Vendor_id,
-        subscriptionId:user_id+Vendor_id,
-        subscriptionType:subscriptionType,
-        mealType:mealType,
-        subscriptionDate:Date.now(),
-        totalMeal:totalMeal, 
-    });
-  await  subscriber.save();
-    res.status(201).json({message: "Subscribed successfully"});
-}catch (err){
-    console.log(err);
-    res.status(400).json({message: "Failed to subscribe"});
-}
-
+  try {
+      const subscriptionDate = Date.now();
+      const subscriptionEndDate = subscriptionDate + totalMeal * 86400000;
+  
+      const subscriber = new Subscriber({
+          clientId: user_id,
+          Vendor_id: Vendor_id,
+          subscriptionId: user_id + Vendor_id,
+          subscriptionType: subscriptionType,
+          mealType: mealType,
+          subscriptionDate: new Date(subscriptionDate), 
+          subscriptionEndDate: new Date(subscriptionEndDate),
+          totalMeal: totalMeal,
+      });
+  
+      await subscriber.save();
+      res.status(201).json({ message: "Subscription added successfully", subscriber });
+  } catch (error) {
+      console.error("Subscription error:", error);
+      res.status(500).json({ error: "Internal Server Error",error });
+  }
+  
     
 });
 
@@ -43,7 +48,7 @@ router.post('/mealcount', async (req, res) => {
 
         
 
-        res.json({todayMeals }); // Return meal count & documents
+        res.json({todayMeals}); // Return meal count & documents
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Internal Server Error" });
@@ -74,3 +79,5 @@ router.post("/mealOff", async (req, res) => {
       res.status(500).json({ error: "Error updating meal option", details: error.message });
   }
 });
+
+ export default router;

@@ -7,6 +7,8 @@ import ExcelRoute from './routes/importExcel.js';
 import findVendorRoute from './routes/findVendor.js';
 import dotenv, { config } from 'dotenv';
 import showAllVendorRoute from './routes/showAllVendor.js';
+import subscriptionRoute from './routes/subscription.js';
+import profileUpdateRoute from './routes/profileUpdate.js';
 config();
 import cookieParser from "cookie-parser";
 
@@ -50,7 +52,8 @@ mongoose.connect(uri)
     app.use('/api/email',ExcelRoute);
     app.use('/api',findVendorRoute);
     app.use ('/api/vendor',showAllVendorRoute);
-
+     app.use('/api',subscriptionRoute);
+     app.use('/api',profileUpdateRoute);
   
     
     // Start Server
