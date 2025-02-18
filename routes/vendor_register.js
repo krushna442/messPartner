@@ -98,7 +98,7 @@ router.post("/register", upload.single("image"), async (req, res) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
       sameSite: "None",
       path: "/",
       maxAge: 24 * 60 * 60 * 1000,
@@ -155,8 +155,14 @@ router.post("/login", async (req, res) => {
 
 // logout section
 router.get("/logout", (req, res) => {
-  res.clearCookie("token");
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: true, 
+    sameSite: "None",
+    path: "/",
+  });
   res.status(200).json({ message: "Logged out successfully" });
 });
+
 
 export default router;
