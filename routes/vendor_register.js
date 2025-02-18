@@ -40,9 +40,18 @@ router.post("/home", isauthenticated, async (req, res) => {
 
 // Register Vendor
 router.post("/register", upload.single("image"), async (req, res) => {
-
   try {
-    const { name, email, number, password, service, address,subscriptiontype,mealtype,contactmobile,whatsapp} = req.body;
+    const {
+      name,
+      email,
+      number,
+      password,
+      address,
+      subscriptiontype,
+      mealtype,
+      contactmobile,
+      whatsapp,
+    } = req.body;
     // const imagepath = req.file?req.file.path:null;
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
@@ -84,14 +93,16 @@ router.post("/register", upload.single("image"), async (req, res) => {
       subscriptiontype,
       mealtype,
       contactmobile,
-      whatsapp
+      whatsapp,
     });
 
     await newvendor.save();
+
+    const Vendordata = await Vendor.findOne({ number: number });
     const token = jwt.sign(
       {
-        _id: newvendor._id,
-        Vendor_id: newvendor.Vendor_id,
+        _id: Vendordata._id,
+        Vendor_id: Vendordata.Vendor_id,
       },
       process.env.JWTSECREAT
     );
@@ -157,12 +168,11 @@ router.post("/login", async (req, res) => {
 router.get("/logout", (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
-    secure: true, 
+    secure: true,
     sameSite: "None",
     path: "/",
   });
   res.status(200).json({ message: "Logged out successfully" });
 });
-
 
 export default router;
