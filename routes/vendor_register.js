@@ -46,7 +46,7 @@ router.post("/register", upload.single("image"), async (req, res) => {
       email,
       number,
       password,
-      address,
+      shoplocation,
       subscriptiontype,
       mealtype,
       contactmobile,
