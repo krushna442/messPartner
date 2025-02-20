@@ -67,9 +67,9 @@ router.post("/register", upload.single("image"), async (req, res) => {
     let newVendorId;
     if (lastVendor && lastVendor.Vendor_id) {
       const lastNum = parseInt(lastVendor.Vendor_id.split("-").pop(), 10);
-      newVendorId = `RARSI-v-${lastNum + 1}`;
+      newVendorId = `MP-v-${lastNum + 1}`;
     } else {
-      newVendorId = "RARSI-v-1";
+      newVendorId = "MP-v-1";
     }
 
     // Check if the vendor already exists with email or number
@@ -89,7 +89,7 @@ router.post("/register", upload.single("image"), async (req, res) => {
       number,
       password,
       image: imageBase64,
-      address,
+      shoplocation,
       subscriptiontype,
       mealtype,
       contactmobile,

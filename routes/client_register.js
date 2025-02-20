@@ -33,6 +33,13 @@ const isAuthenticated = (req, res, next) => {
   }
 };
 
+router.post("/home", isAuthenticated, async (req, res) => {
+  res.status(200).json({
+    message: "This is the home page",
+    clientDetails :await Client.findById(req.user._id)   
+  });
+});
+
 
 
 // Define the schema correctly (Fix type issue)
@@ -58,9 +65,9 @@ router.post("/register", async (req, res) => {
 let newUserId;
 if (lastClient && lastClient.user_id) {
   const lastNum = parseInt(lastClient.user_id.split("-").pop(), 10);
-  newUserId = `RARSI-c-${lastNum + 1}`;
+  newUserId = `MP-c-${lastNum + 1}`;
 } else {
-  newUserId = "RARSI-c-1";
+  newUserId = "MP-c-1";
 }
 
     const newClient = new Client({
