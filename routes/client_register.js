@@ -44,6 +44,7 @@ router.post("/home", isAuthenticated, async (req, res) => {
 
 
 
+
 // Define the schema correctly (Fix type issue)
 // const clientSchema = new mongoose.Schema({
 //   user_id: { type: String, required: true, unique: true },
@@ -114,9 +115,12 @@ router.post("/login", async (req, res) => {
       user_id: userdata.user_id
      },process.env.JWTSECREAT);
 
-    res.cookie("token", token, {
+     res.cookie("token", token, {
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
+      secure: true,
+      sameSite: "None",
+      path: "/",
+      maxAge: 24 * 60 * 60 * 1000,
     });
 
     res.status(200).json({ message: "Successfully logged in" });
