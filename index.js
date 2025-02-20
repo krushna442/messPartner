@@ -18,7 +18,7 @@ const app = express();
 const PORT =3000;
 
 
-const allowedOrigins = ["http://localhost:5173","https://vendormp.netlify.app"];
+const allowedOrigins = ["http://localhost:5173","https://vendormp.netlify.app","http://localhost:5174"];
 
 app.use(cors({
   origin: (origin, callback) => {
