@@ -8,18 +8,18 @@ dotenv.config();
 
 
 router.post('/subscribtion', async(req,res)=>{
-  const { user_id, Vendor_id, subscriptionType, mealType, totalMeal } = req.body;
-
+  const { user_id, Vendor_id, subscriptionType, mealtype } = req.body;
+  const  totalMeal=subscriptionType;
   try {
       const subscriptionDate = Date.now();
       const subscriptionEndDate = subscriptionDate + totalMeal * 86400000;
   
       const subscriber = new Subscriber({
-          clientId: user_id,
+          user_id: user_id,
           Vendor_id: Vendor_id,
           subscriptionId: user_id + Vendor_id,
           subscriptionType: subscriptionType,
-          mealType: mealType,
+          mealType: mealtype,
           subscriptionDate: new Date(subscriptionDate), 
           subscriptionEndDate:subscriptionEndDate,
           totalMeal: totalMeal,

@@ -1,12 +1,15 @@
 import mongoose from "mongoose";
+import { type } from "os";
 
 const subscriberSchema = mongoose.Schema(
   {
-    clientId: { type: String },
+    user_id: { type: String },
     Vendor_id: { type: String },
     subscriptionId: { type: String },
-    subscriptionType: { type: String },
-    mealType: { type: String },
+    subscriptionType: {type:Number},
+    mealtype: { type: String },
+    address1:{type:String},
+    address2:{type:String},
     subscriptionDate: { type: Date, default: Date.now },
     subscriptionEndDate: { type: Date },
     totalMeal: { type: Number },
