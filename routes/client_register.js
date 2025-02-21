@@ -37,28 +37,12 @@ router.use(express.urlencoded({ extended: true }));
 
 router.post("/home", isAuthenticated, async (req, res) => {
   res.status(200).json({
-    message: "This is the home page",
-    clientDetails :await Client.findById(req.user._id)   
+    message: "This is the home page", 
+    clientDetails: await Client.findOne({ user_id:req.user.user_id }),
   });
 });
 
 
-
-
-// Define the schema correctly (Fix type issue)
-// const clientSchema = new mongoose.Schema({
-//   user_id: { type: String, required: true, unique: true },
-//   name: { type: String, required: true },
-//   email: { type: String, required: true, unique: true },
-//   number: { type: String, required: true, unique: true },
-//   password: { type: String, required: true, unique:false },
-//   address: { type: String, required: true },
-//   meal: { type: String, default: "yes" },
-// });
-
-// const Client = mongoose.model("Client", clientSchema);
-
-// Register User  
 router.post("/register", async (req, res) => {
   try {
     const { name, email, number, password,address } = req.body;
@@ -131,7 +115,12 @@ router.post("/login", async (req, res) => {
 
 // Logout User
 router.get("/logout", (req, res) => {
-  res.clearCookie("token");
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "None",
+    path: "/",
+  });
   res.status(200).json({ message: "Logged out successfully" });
 });
 

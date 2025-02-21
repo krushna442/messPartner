@@ -21,7 +21,7 @@ router.post('/subscribtion', async(req,res)=>{
           subscriptionType: subscriptionType,
           mealType: mealType,
           subscriptionDate: new Date(subscriptionDate), 
-          subscriptionEndDate: new Date(subscriptionEndDate),
+          subscriptionEndDate:subscriptionEndDate,
           totalMeal: totalMeal,
       });
   
