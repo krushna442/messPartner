@@ -10,6 +10,7 @@ import showAllVendorRoute from './routes/showAllVendor.js';
 import subscriptionRoute from './routes/subscription.js';
 import profileUpdateRoute from './routes/profileUpdate.js';
 import mysubscriptionRoute from './routes/clients/mysubscriptions.js';
+import myclientsRoute from './routes/myclients.js';
 config();
 import cookieParser from "cookie-parser";
 
@@ -56,7 +57,7 @@ mongoose.connect(uri)
      app.use('/api',subscriptionRoute);
      app.use('/api',profileUpdateRoute);
      app.use('/api',mysubscriptionRoute);
-  
+    app.use ('/api/vendor',myclientsRoute);
     
     // Start Server
 app.listen(PORT, () => {
