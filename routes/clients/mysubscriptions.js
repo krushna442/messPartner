@@ -7,14 +7,8 @@ const router = express.Router();
 dotenv.config();
 
 router.get('/mysubscriptions',isAuthenticated,async(req,res)=>{
-    // router.post("/home", isAuthenticated, async (req, res) => {
-    //     res.status(200).json({
-    //       message: "This is the home page",
-    //       clientDetails :await Client.findById(req.user._id)   
-    //     });
-    //   });
     res.status(200).json({
-        subscriptiondetails :await Subscriber.find({clientId:req.user.user_id})
+        subscriptiondetails :await Subscriber.find({user_id:req.user.user_id})
 
         });
 })
