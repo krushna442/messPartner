@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
-import { type } from "os";
-import { json } from "stream/consumers";
-mealrecordschema= mongoose.Schema({
+ const mealrecordschema= mongoose.Schema({
     Vendor_id:{type:String,required:true},
     date: {type:Date,required:true},
-    b
+    breakfast:{type:Array},
+    lunch:{type:Array},
+    dinner:{type:Array}
     });
-    Mealrecord=mongoose.model("Mealrecord",mealrecordschema);
+const Mealrecord=mongoose.model("Mealrecord",mealrecordschema);
+export default Mealrecord;
