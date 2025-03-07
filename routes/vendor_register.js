@@ -15,7 +15,7 @@ const upload = multer({ storage: storage });
 router.use(express.json());
 router.use(express.urlencoded({ extended: true }));
 
-// const isauthenticated = (req, res, next) => {
+
 //   const token = req.cookies.token;
 //   if (!token) {
 //     return res.status(401).json({ message: "login first" });

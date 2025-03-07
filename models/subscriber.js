@@ -17,6 +17,7 @@ const subscriberSchema = mongoose.Schema(
     receivedLunch: { type: Number, default: 0 },
     receivedDinner: { type: Number, default: 0 },
     mealOption: { type: Boolean, default: true },
+    mealskipped:{type:Number,default:0}
   },
   { timestamps: true }
 );

@@ -12,6 +12,7 @@ import profileUpdateRoute from './routes/profileUpdate.js';
 import mysubscriptionRoute from './routes/clients/mysubscriptions.js';
 import myclientsRoute from './routes/myclients.js';
 import mealcountRoute from './routes/mealcount.js';
+import menuRoute from './routes/menu.js'
 config();
 import cookieParser from "cookie-parser";
 
@@ -60,6 +61,7 @@ mongoose.connect(uri)
      app.use('/api',mysubscriptionRoute);
     app.use ('/api/vendor',myclientsRoute);
     app.use('/api/vendor',mealcountRoute);
+    app.use('/api',menuRoute);
     
     // Start Server
 app.listen(PORT, () => {
