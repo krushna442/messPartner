@@ -3,7 +3,6 @@ import mongoose from "mongoose";
 
 const menuSchema = new mongoose.Schema({
   Vendor_id: { type: String },
-  week: { type: Number, required: true },
   menu: {
     monday: { breakfast: String, lunch: String, dinner: String },
     tuesday: { breakfast: String, lunch: String, dinner: String },

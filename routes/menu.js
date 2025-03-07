@@ -5,14 +5,14 @@ const router = express.Router();
 
 router.post("/add/menu", async (req, res) => {
   try {
-    const { week, meals, Vendor_id } = req.body;
+    const { meals, Vendor_id } = req.body;
 
     if (!Vendor_id) {
       return res.status(400).json({ message: "Vendor_id is required" });
     }
 
     // Check if a menu already exists for this vendor and week
-    let existingMenu = await Menu.findOne({ week, Vendor_id });
+    let existingMenu = await Menu.findOne({ Vendor_id });
 
     // If a menu exists, use its menu object; otherwise, create a new structure
     let menu = existingMenu
@@ -43,7 +43,7 @@ router.post("/add/menu", async (req, res) => {
       return res.status(200).json({ message: "Weekly menu updated", existingMenu });
     } else {
       // Save new menu
-      const newMenu = new Menu({ Vendor_id, week, menu });
+      const newMenu = new Menu({ Vendor_id,  menu });
       await newMenu.save();
       return res.status(201).json({ message: "Weekly menu added", newMenu });
     }
@@ -53,10 +53,10 @@ router.post("/add/menu", async (req, res) => {
 });
 
 // Get menu for a specific vendor and week
-router.get("/menu/:vendorId/:week", async (req, res) => {
+router.get("/menu/:vendorId", async (req, res) => {
   try {
-    const { vendorId, week } = req.params;
-    const menu = await Menu.findOne({ Vendor_id: vendorId, week });
+    const { vendorId} = req.params;
+    const menu = await Menu.findOne({ Vendor_id: vendorId});
 
     if (!menu) {
       return res.status(404).json({ message: "Menu not found for this vendor and week" });
