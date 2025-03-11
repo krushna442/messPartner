@@ -14,15 +14,12 @@ const fetchAndStoreMeals = async () => {
     const mealoffsubscribers = await Subscriber.find({ mealOption: false });
 
     for (const subscriber of mealoffsubscribers) {
-        subscriber.mealskipped += 1;
-        subscriber.subscriptionEndDate = new Date(subscriber.subscriptionEndDate.getTime() + 8 * 60 * 60 * 1000);
-    
-        await subscriber.save();
+      subscriber.mealskipped += 1;
+      subscriber.subscriptionEndDate = new Date(subscriber.subscriptionEndDate.getTime() + 8 * 60 * 60 * 1000);
+      await subscriber.save();
     }
-    
 
     const subscribers = await Subscriber.find({ mealOption: true });
-
     if (!subscribers.length) {
       console.log("No subscribers found.");
       return;
@@ -30,48 +27,38 @@ const fetchAndStoreMeals = async () => {
 
     const vendorMeals = {};
     const currentTime = new Date();
-    const today = new Date().toISOString().split("T")[0]; // Get YYYY-MM-DD
+    const today = new Date().toISOString().split("T")[0];
 
-    subscribers.forEach((subscriber) => {
+    for (const subscriber of subscribers) {
       subscriber.mealskipped = 0;
       const { Vendor_id, user_id } = subscriber;
       if (!vendorMeals[Vendor_id]) {
         vendorMeals[Vendor_id] = { breakfast: [], lunch: [], dinner: [] };
       }
-
       const currentHour = currentTime.getHours();
 
       if (currentHour >= 4 && currentHour < 10) {
         vendorMeals[Vendor_id].breakfast.push(user_id);
+        subscriber.receivedBreakfast += 1;
       } else if (currentHour >= 10 && currentHour < 18) {
         vendorMeals[Vendor_id].lunch.push(user_id);
+        subscriber.receivedLunch += 1;
       } else {
         vendorMeals[Vendor_id].dinner.push(user_id);
+        subscriber.receivedDinner += 1;
       }
-    });
+      await subscriber.save();
+    }
 
-    // Store or update data in Mealrecord collection
     for (const [vendorId, meals] of Object.entries(vendorMeals)) {
-      const existingRecord = await Mealrecord.findOne({
-        Vendor_id: vendorId,
-        date: today,
-      });
+      const existingRecord = await Mealrecord.findOne({ Vendor_id: vendorId, date: today });
 
       if (existingRecord) {
-        // Update existing record
-        if (meals.breakfast.length) {
-          existingRecord.breakfast.push(...meals.breakfast);
-        }
-        if (meals.lunch.length) {
-          existingRecord.lunch.push(...meals.lunch);
-        }
-        if (meals.dinner.length) {
-          existingRecord.dinner.push(...meals.dinner);
-        }
+        if (meals.breakfast.length) existingRecord.breakfast.push(...meals.breakfast);
+        if (meals.lunch.length) existingRecord.lunch.push(...meals.lunch);
+        if (meals.dinner.length) existingRecord.dinner.push(...meals.dinner);
         await existingRecord.save();
-        console.log(`Updated meal record for vendor ${vendorId}`);
       } else {
-        // Create a new record
         await Mealrecord.create({
           Vendor_id: vendorId,
           date: today,
@@ -79,10 +66,8 @@ const fetchAndStoreMeals = async () => {
           lunch: meals.lunch,
           dinner: meals.dinner,
         });
-        console.log(`Created new meal record for vendor ${vendorId}`);
       }
     }
-
     console.log("Meal records updated successfully!");
   } catch (error) {
     console.error("Error fetching and storing meals:", error);
@@ -94,31 +79,28 @@ router.get("/mealcount", isauthenticated, async (req, res) => {
     if (!req.Vendor || !req.Vendor.Vendor_id) {
       return res.status(400).json({ message: "Vendor ID missing in request." });
     }
-
-    const currentDate = new Date();
-    const startOfDay = new Date(currentDate.setHours(0, 0, 0, 0)); // 00:00:00
-    const endOfDay = new Date(currentDate.setHours(23, 59, 59, 999)); // 23:59:59
     
-    const mealdata = await Mealrecord.find({
-      Vendor_id: req.Vendor.Vendor_id,
-      date: { $gte: startOfDay, $lte: endOfDay } // Filter by today's date
-    });
-    
-    console.log("Fetched meal records:", mealdata); // Log the fetched data
-
+    const today = new Date().toISOString().split("T")[0];
+    const mealdata = await Mealrecord.find({ Vendor_id: req.Vendor.Vendor_id, date: today });
     res.status(200).json(mealdata);
   } catch (error) {
     console.error("Error fetching meal records:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
+
 router.post("/userdetail", async (req, res) => {
-  const { user_id } = req.body;
-  const user = await Client.findOne({ user_id });
-  if (!user) {
-    return res.status(404).json({ message: "User not found" });
+  try {
+    const { user_id } = req.body;
+    const user = await Client.findOne({ user_id });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json(user);
+  } catch (error) {
+    console.error("Error fetching user details:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
-  res.status(200).json(user);
 });
 
 cron.schedule("0 4,18 * * *", () => {
@@ -126,9 +108,27 @@ cron.schedule("0 4,18 * * *", () => {
   fetchAndStoreMeals();
 });
 
-cron.schedule("16 11 * * *", () => {
-  console.log("Running scheduled meal count fetch at 12:20 PM...");
+cron.schedule("48 11 * * *", () => {
+  console.log("Running scheduled meal count fetch at 11:48 AM...");
   fetchAndStoreMeals();
+});
+
+router.post("/addgroup", async (req, res) => {
+  try {
+    const { user_id, deliverygroup } = req.body;
+    if (!user_id || !deliverygroup) {
+      return res.status(400).json({ message: "Client ID and delivery address are required" });
+    }
+
+    const result = await Subscriber.updateMany({ user_id }, { $set: { deliverygroup } });
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ message: "Client not found" });
+    }
+    res.status(200).json({ message: "Delivery address added successfully", matchedDocuments: result.matchedCount, modifiedDocuments: result.modifiedCount });
+  } catch (error) {
+    console.error("Error adding delivery group:", error);
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
 export default router;

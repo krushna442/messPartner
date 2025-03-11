@@ -107,13 +107,14 @@ router.post("/register", upload.single("image"), async (req, res) => {
       process.env.JWTSECREAT
     );
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "None",
-      path: "/",
-      maxAge: 24 * 60 * 60 * 1000,
-    });
+res.cookie("token", token, {
+  httpOnly: true,
+  secure: true,
+  sameSite: "None",
+  path: "/",
+  maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+});
+
     res.status(201).json({ message: "Vendor created", Vendor_id: newVendorId });
   } catch (error) {
     console.error("Error:", error);
@@ -148,7 +149,7 @@ router.post("/login", async (req, res) => {
       secure: true,
       sameSite: "None",
       path: "/",
-      maxAge: 24 * 60 * 60 * 1000,
+      maxAge: 30*24 * 60 * 60 * 1000,
     });
 
     res.status(200).json({
