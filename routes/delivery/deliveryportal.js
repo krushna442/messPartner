@@ -86,7 +86,8 @@ router.post('/delivery', isauthenticated, async (req, res) => {
         // Fetch subscribers who belong to the provided delivery group and match user IDs
         const subscribers = await Subscriber.find({
             user_id: { $in: userIds },
-            deliverygroup: deliverygroup
+            deliverygroup: deliverygroup,
+            Vendor_id: req.Vendor.Vendor_id
         });
 
         if (!subscribers.length) {
