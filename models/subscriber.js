@@ -5,6 +5,7 @@ const subscriberSchema = mongoose.Schema(
   {
     user_id: { type: String },
     Vendor_id: { type: String },
+    user_name:{type:String},
     subscriptionId: { type: String },
     subscriptionType: {type:Number},
     mealtype: { type: String },

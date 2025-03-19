@@ -27,7 +27,7 @@ router.post("/updateprofile/shopdetail", isauthenticated, async (req, res) => {
     // Update vendor details
     vendorDetails.shopname = shopname;
     vendorDetails.shoplocation = shoplocation;
-    vendorDetails.location = location;
+    vendorDetails.location = location.split(',').map(loc => loc.trim());
 
     // Save updated vendor details
     await vendorDetails.save();
