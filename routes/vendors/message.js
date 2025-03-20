@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import express from "express";
 import isAuthenticated from "../../utils/clientauth.js";
 import Subscriber from "../../models/subscriber.js";
+import cron from "node-cron"; // Missing import
 
 const router = express.Router();
 
@@ -40,18 +41,19 @@ router.get('/show/message', isAuthenticated, async (req, res) => {
         const user_id = req.user.user_id;
         const vendorIds = await Subscriber.find({ user_id }).select('Vendor_id');
 
+        if (!vendorIds.length) {
+            return res.status(200).json({ messages: [] }); // No vendors, return empty array
+        }
+
         const now = new Date();
 
-        const messages = await Promise.all(
-            vendorIds.map((id) =>
-                Message.find({
-                    Vendor_id: id.Vendor_id,
-                    date: { $gte: now } // Fetch only valid messages
-                })
-            )
-        );
+        // Optimized query to fetch messages
+        const messages = await Message.find({
+            Vendor_id: { $in: vendorIds.map(v => v.Vendor_id) },
+            date: { $gte: now } // Fetch only valid messages
+        });
 
-        res.status(200).json({ messages: messages.flat() }); // Flatten the array
+        res.status(200).json({ messages });
     } catch (error) {
         res.status(400).json({ message: "Error in fetching messages", error });
     }
@@ -61,14 +63,16 @@ router.get('/show/message', isAuthenticated, async (req, res) => {
 const deleteExpiredMessages = async () => {
     try {
         const now = new Date();
-        await Message.deleteMany({ date: { $lt: now } });
-        console.log("✅ Expired messages deleted.");
+        const result = await Message.deleteMany({ date: { $lt: now } });
+        console.log(`✅ Deleted ${result.deletedCount} expired messages.`);
     } catch (error) {
         console.error("❌ Error deleting expired messages:", error);
     }
 };
 
-// Run the cleanup job every hour
-setInterval(deleteExpiredMessages, 60 * 60 * 1000); // Runs every hour
+// Run the cleanup job every night at midnight
+cron.schedule("0 0 * * *", () => {
+    deleteExpiredMessages();
+});
 
 export default router;
