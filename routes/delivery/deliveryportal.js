@@ -40,8 +40,8 @@ router.post('/delivery/login', async (req, res) => {
 
 router.post('/delivery/register', async (req, res) => {
     try {
-        const { name, email, phone, Vendor_id } = req.body;
-        await Delivery.create({ name, email, phone, Vendor_id });
+        const { name, phone, Vendor_id } = req.body;
+        await Delivery.create({ name, phone, Vendor_id });
 
         res.status(201).json({ message: "Delivery boy registered successfully" });
     } catch (error) {
@@ -95,11 +95,11 @@ router.post('/delivery', isauthenticated, async (req, res) => {
         }
 
         // Fetch user details from User collection
-        const userDetails = await Client.find({
-            user_id: { $in: subscribers.map(sub => sub.user_id) }
-        }).select("-password"); // Exclude password for security
+        // const userDetails = await Client.find({
+        //     user_id: { $in: subscribers.map(sub => sub.user_id) }
+        // }).select("-password"); // Exclude password for security
 
-        res.status(200).json(userDetails);
+        res.status(200).json(subscribers);
 
     } catch (error) {
         console.error("Error fetching delivery list:", error);

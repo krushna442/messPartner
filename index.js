@@ -14,7 +14,8 @@ import myclientsRoute from './routes/myclients.js';
 import mealcountRoute from './routes/mealcount.js';
 import menuRoute from './routes/menu.js';
 import deliveryRoute from './routes/delivery/deliveryportal.js';
-import historyRoute from './routes/vendors/history.js'
+import historyRoute from './routes/vendors/history.js';
+import messageRoute from './routes/vendors/message.js'
 config();
 import cookieParser from "cookie-parser";
 
@@ -65,7 +66,9 @@ mongoose.connect(uri)
     app.use('/api/vendor',mealcountRoute);
     app.use('/api',menuRoute);
     app.use('/api', deliveryRoute);
-    app.use('/api',historyRoute)
+    app.use('/api',historyRoute);
+    app.use ('/api',messageRoute);
+
     
     // Start Server
 app.listen(PORT, () => {

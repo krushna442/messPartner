@@ -5,16 +5,16 @@ const router = express.Router();
 
 router.post("/add/menu", async (req, res) => {
   try {
-    const { meals, Vendor_id } = req.body;
+    const { meals, Vendor_id, type, packageType } = req.body;
 
-    if (!Vendor_id) {
-      return res.status(400).json({ message: "Vendor_id is required" });
+    if (!Vendor_id || !type || !packageType) {
+      return res.status(400).json({ message: "Vendor_id, type, and packageType are required" });
     }
 
-    // Check if a menu already exists for this vendor and week
-    let existingMenu = await Menu.findOne({ Vendor_id });
+    // Check if a menu already exists for this vendor, type, and packageType
+    let existingMenu = await Menu.findOne({ Vendor_id, type, packageType });
 
-    // If a menu exists, use its menu object; otherwise, create a new structure
+    // Default empty menu structure
     let menu = existingMenu
       ? existingMenu.menu
       : {
@@ -28,11 +28,11 @@ router.post("/add/menu", async (req, res) => {
         };
 
     // Populate menu based on received data
-    meals.forEach(({ day, type, item }) => {
+    meals.forEach(({ day, mealType, item }) => {
       let dayLower = day.toLowerCase();
-      let typeLower = type.toLowerCase();
-      if (menu[dayLower] && menu[dayLower][typeLower] !== undefined) {
-        menu[dayLower][typeLower] = item;
+      let mealTypeLower = mealType.toLowerCase();
+      if (menu[dayLower] && menu[dayLower][mealTypeLower] !== undefined) {
+        menu[dayLower][mealTypeLower] = item;
       }
     });
 
@@ -42,29 +42,29 @@ router.post("/add/menu", async (req, res) => {
       await existingMenu.save();
       return res.status(200).json({ message: "Weekly menu updated", existingMenu });
     } else {
-      // Save new menu
-      const newMenu = new Menu({ Vendor_id,  menu });
+      // Save new menu with type and packageType
+      const newMenu = new Menu({ Vendor_id, type, packageType, menu });
       await newMenu.save();
       return res.status(201).json({ message: "Weekly menu added", newMenu });
     }
   } catch (error) {
-    res.status(500).json({ message: "Error adding/updating weekly menu", error });
+    res.status(500).json({ message: "Error adding/updating weekly menu", error: error.message });
   }
 });
 
-// Get menu for a specific vendor and week
-router.get("/menu/:vendorId", async (req, res) => {
+// Get menu for a specific vendor, type, and packageType
+router.get("/menu/:vendorId/:type/:packageType", async (req, res) => {
   try {
-    const { vendorId} = req.params;
-    const menu = await Menu.findOne({ Vendor_id: vendorId});
+    const { vendorId, type, packageType } = req.params;
+    const menu = await Menu.findOne({ Vendor_id: vendorId, type, packageType });
 
     if (!menu) {
-      return res.status(404).json({ message: "Menu not found for this vendor and week" });
+      return res.status(404).json({ message: "Menu not found for this vendor, type, and packageType" });
     }
 
     res.status(200).json(menu);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching menu", error });
+    res.status(500).json({ message: "Error fetching menu", error: error.message });
   }
 });
 

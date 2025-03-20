@@ -2,13 +2,14 @@ import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import Subscriber from '../models/subscriber.js';
+import isAuthenticated from '../utils/clientauth.js'
 const router = express.Router();
 dotenv.config();
 
 
 
-router.post('/subscribtion', async(req,res)=>{
-  const { user_id, Vendor_id,user_name, subscriptionType, mealtype ,address1,address2} = req.body;
+router.post('/subscribtion',isAuthenticated, async(req,res)=>{
+  const { user_id, Vendor_id,subscriptionType, mealtype ,address1,address2} = req.body;
   const  totalMeal=subscriptionType;
   try {
       const subscriptionDate = Date.now();
@@ -17,7 +18,8 @@ router.post('/subscribtion', async(req,res)=>{
       const subscriber = new Subscriber({
           user_id: user_id,
           Vendor_id: Vendor_id,
-          user_name:user_name,
+          user_name: req.user.name,
+          number: req.user.number,
           address1:address1,
           address2:address2,
           subscriptionId: user_id + Vendor_id,
@@ -38,25 +40,6 @@ router.post('/subscribtion', async(req,res)=>{
     
 });
 
-router.post('/mealcount', async (req, res) => {
-    try {
-        const { Vendor_id } = req.body;
-        if (!Vendor_id) {
-            return res.status(400).json({ error: "Vendor_id is required" });
-        }
-        const todayMeals = await Subscriber.find({
-            Vendor_id: Vendor_id, 
-            mealOption: "yes"
-        });
-
-        
-
-        res.json({todayMeals}); // Return meal count & documents
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Internal Server Error" });
-    }
-});
 
 router.post("/mealOff", async (req, res) => {
   try {

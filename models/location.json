@@ -1,0 +1,250 @@
+{
+  "bhubaneswar": {
+    "sahidNagar": {
+      "sahidNagarBlockA": {
+        "blockAResidentialColony": {
+          "lane1": {
+            "houseNo101": {},
+            "houseNo102": {}
+          },
+          "lane2": {
+            "houseNo201": {},
+            "houseNo202": {}
+          }
+        },
+        "blockAMarketLane": {
+          "groceryStores": {
+            "bigBazaar": {},
+            "relianceFresh": {}
+          },
+          "restaurants": {
+            "dominos": {},
+            "cafeCoffeeDay": {}
+          }
+        }
+      }
+    },
+    "jayadevVihar": {
+      "jayadevViharResidentialColony": {
+        "lane1": {
+          "houseNo1": {},
+          "houseNo2": {}
+        },
+        "vipResidency": {
+          "towerA": {
+            "flat101": {},
+            "flat102": {}
+          }
+        }
+      },
+      "jayadevViharMarket": {
+        "shoppingComplex": {
+          "forumMart": {}
+        },
+        "restaurants": {
+          "mainlandChina": {},
+          "barbequeNation": {}
+        }
+      }
+    },
+    "kharavelaNagar": {
+      "kharavelaMarketComplex": {
+        "wholesaleShops": {
+          "grainWholesale": {},
+          "electronicsWholesale": {}
+        }
+      },
+      "kharavelaResidentialArea": {
+        "laneA": {
+          "houseNoA1": {},
+          "houseNoA2": {}
+        }
+      }
+    },
+    "nayanpalli": {
+      "nayanpalliResidentialColony": {
+        "laneX": {
+          "houseX1": {},
+          "houseX2": {}
+        },
+        "royalEnclave": {
+          "towerA": {
+            "flatA101": {},
+            "flatA102": {}
+          }
+        }
+      },
+      "nayanpalliShoppingArea": {
+        "malls": {
+          "esplanadeMall": {},
+          "marionMall": {}
+        }
+      }
+    },
+    "saileshreeVihar": {
+      "saileshreeViharSector1": {
+        "residentialLane": {
+          "house101": {},
+          "house102": {}
+        },
+        "apartmentComplex": {
+          "towerA": {
+            "flat201": {},
+            "flat202": {}
+          }
+        }
+      },
+      "saileshreeViharSector2": {
+        "commercialArea": {
+          "relianceMart": {},
+          "bigBazaar": {}
+        }
+      }
+    },
+    "infocity": {
+      "infocityTechPark": {
+        "companyBuildings": {
+          "tcsBuilding": {},
+          "infosysBuilding": {}
+        }
+      },
+      "infocityResidentialZone": {
+        "laneAlpha": {
+          "villaA1": {},
+          "villaA2": {}
+        },
+        "highRiseApartments": {
+          "blockX": {
+            "flat301": {},
+            "flat302": {}
+          }
+        }
+      }
+    },
+    "patia": {
+      "patiaResidentialArea": {
+        "laneZ": {
+          "houseZ1": {},
+          "houseZ2": {}
+        }
+      },
+      "patiaCommercialHub": {
+        "malls": {
+          "infocityMall": {}
+        }
+      }
+    },
+    "oldTown": {
+      "lingarajTempleArea": {
+        "northGate": {},
+        "southGate": {}
+      },
+      "oldTownResidentialColony": {
+        "laneM": {
+          "houseM1": {},
+          "houseM2": {}
+        }
+      }
+    },
+    "chandrasekharpur": {
+      "csPurSector1": {
+        "residentialBlocks": {
+          "block1": {
+            "houseA": {},
+            "houseB": {}
+          }
+        }
+      },
+      "csPurMarketArea": {
+        "groceryStores": {
+          "dmart": {},
+          "bigBazaar": {}
+        }
+      }
+    },
+    "chandakaRealEstate": {
+      "patia": {
+        "infocity": {
+          "infocityTechPark": {
+            "companyBuildings": {
+              "tcsBuilding": {},
+              "infosysBuilding": {},
+              "mindtreeBuilding": {}
+            }
+          },
+          "infocityResidentialZone": {
+            "laneAlpha": {
+              "villaA1": {},
+              "villaA2": {}
+            },
+            "highRiseApartments": {
+              "blockX": {
+                "flat301": {},
+                "flat302": {}
+              }
+            }
+          }
+        },
+        "kiitUniversityArea": {
+          "campus1": {},
+          "campus2": {},
+          "campus3": {}
+        }
+      },
+      "dlfCyberCity": {
+        "itPark": {
+          "officeBuildings": {
+            "towerA": {
+              "floor1": {
+                "company1": "TCS",
+                "company2": "Infosys"
+              },
+              "floor2": {
+                "company1": "Wipro",
+                "company2": "Capgemini"
+              }
+            },
+            "towerB": {
+              "floor1": {
+                "company1": "Deloitte",
+                "company2": "IBM"
+              },
+              "floor2": {
+                "company1": "Accenture",
+                "company2": "HCL"
+              }
+            }
+          }
+        },
+        "commercialComplex": {
+          "restaurants": {
+            "cafeCoffeeDay": {},
+            "dominos": {},
+            "subway": {}
+          },
+          "retailShops": {
+            "electronicStore": {
+              "croma": {}
+            },
+            "fashionStores": {
+              "lifestyle": {},
+              "pantaloons": {}
+            }
+          }
+        },
+        "residentialComplex": {
+          "dlfResidencyTowers": {
+            "tower1": {
+              "flat101": {},
+              "flat102": {}
+            },
+            "tower2": {
+              "flat201": {},
+              "flat202": {}
+            }
+          }
+        }
+      }
+    }
+  }
+}
