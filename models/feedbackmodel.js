@@ -3,7 +3,7 @@ const feedbackSchema = new mongoose.Schema ({
     user_id:String,
     name:String,
     Vendor_id:String,
-    message:String,
+    feedback:String,
     rating:Number,
     image: String
 },{timestamps:true});
