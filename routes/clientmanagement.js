@@ -52,3 +52,5 @@ router.post("/vendor/clients/expiringsoon", async (req, res) => {
     res.status(500).json({ success: false, message: error });
   }
 });
+
+ export default router;
