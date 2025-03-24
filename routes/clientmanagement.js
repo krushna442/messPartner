@@ -3,7 +3,6 @@ import Subscriber from "../models/subscriber.js";
 const router = express.Router();
 
 router.get("/vendor/clients/active", async (req, res) => {
-  res.json(activeClients);
   try {
     const activeClients = await Subscriber.find({ mealskipped: 0 });
     res.json({ success: true, data: activeClients });

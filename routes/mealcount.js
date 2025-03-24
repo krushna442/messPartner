@@ -40,7 +40,7 @@ const fetchAndStoreMeals = async () => {
       if (currentHour >= 4 && currentHour < 10) {
         vendorMeals[Vendor_id].breakfast.push(user_id);
         subscriber.receivedBreakfast += 1;
-      } else if (currentHour >= 10 && currentHour < 18) {
+      } else if (currentHour >= 10 && currentHour < 13) {
         vendorMeals[Vendor_id].lunch.push(user_id);
         subscriber.receivedLunch += 1;
       } else {
@@ -108,7 +108,7 @@ cron.schedule("0 4,18 * * *", () => {
   fetchAndStoreMeals();
 });
 
-cron.schedule("40 10 * * *", () => {
+cron.schedule("08 14 * * *", () => {
   console.log("Running scheduled meal count fetch at 11:48 AM...");
   fetchAndStoreMeals();
 });
