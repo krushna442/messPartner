@@ -18,6 +18,7 @@ router.post('/subscribtion',isAuthenticated, async(req,res)=>{
       const subscriber = new Subscriber({
           user_id: user_id,
           Vendor_id: Vendor_id,
+          mealtype:mealtype,
           user_name: req.user.name,
           number: req.user.number,
           address1:address1,

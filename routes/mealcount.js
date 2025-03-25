@@ -11,54 +11,91 @@ const router = express.Router();
 // Function to fetch and update/store meal records
 const fetchAndStoreMeals = async () => {
   try {
+    // 1️⃣ Fetch Subscribers Who Skipped Meals (mealOption: false)
     const mealoffsubscribers = await Subscriber.find({ mealOption: false });
 
     for (const subscriber of mealoffsubscribers) {
       subscriber.mealskipped += 1;
-      subscriber.subscriptionEndDate = new Date(subscriber.subscriptionEndDate.getTime() + 8 * 60 * 60 * 1000);
+      subscriber.subscriptionEndDate = new Date(
+        subscriber.subscriptionEndDate.getTime() + 8 * 60 * 60 * 1000
+      );
       await subscriber.save();
     }
 
+    // 2️⃣ Fetch Active Subscribers (mealOption: true)
     const subscribers = await Subscriber.find({ mealOption: true });
+
     if (!subscribers.length) {
-      console.log("No subscribers found.");
+      console.log("No active subscribers found.");
       return;
     }
 
-    const vendorMeals = {};
+    const vendorMeals = {}; // Stores grouped data
     const currentTime = new Date();
     const today = new Date().toISOString().split("T")[0];
 
     for (const subscriber of subscribers) {
       subscriber.mealskipped = 0;
-      const { Vendor_id, user_id } = subscriber;
+
+      const { Vendor_id, user_id, mealtype } = subscriber;
+
       if (!vendorMeals[Vendor_id]) {
-        vendorMeals[Vendor_id] = { breakfast: [], lunch: [], dinner: [] };
+        vendorMeals[Vendor_id] = {
+          breakfast: { veg: [], nonVeg: [] },
+          lunch: { veg: [], nonVeg: [] },
+          dinner: { veg: [], nonVeg: [] },
+        };
       }
+
       const currentHour = currentTime.getHours();
+      const isVeg = mealtype === "veg";
 
       if (currentHour >= 4 && currentHour < 10) {
-        vendorMeals[Vendor_id].breakfast.push(user_id);
+        // Breakfast Time
+        isVeg
+          ? vendorMeals[Vendor_id].breakfast.veg.push(user_id)
+          : vendorMeals[Vendor_id].breakfast.nonVeg.push(user_id);
         subscriber.receivedBreakfast += 1;
       } else if (currentHour >= 10 && currentHour < 18) {
-        vendorMeals[Vendor_id].lunch.push(user_id);
+        // Lunch Time
+        isVeg
+          ? vendorMeals[Vendor_id].lunch.veg.push(user_id)
+          : vendorMeals[Vendor_id].lunch.nonVeg.push(user_id);
         subscriber.receivedLunch += 1;
       } else {
-        vendorMeals[Vendor_id].dinner.push(user_id);
+        // Dinner Time
+        isVeg
+          ? vendorMeals[Vendor_id].dinner.veg.push(user_id)
+          : vendorMeals[Vendor_id].dinner.nonVeg.push(user_id);
         subscriber.receivedDinner += 1;
       }
       await subscriber.save();
     }
 
+    // 3️⃣ Store Grouped Meal Records
     for (const [vendorId, meals] of Object.entries(vendorMeals)) {
-      const existingRecord = await Mealrecord.findOne({ Vendor_id: vendorId, date: today });
+      const existingRecord = await Mealrecord.findOne({
+        Vendor_id: vendorId,
+        date: today,
+      });
 
       if (existingRecord) {
-        if (meals.breakfast.length) existingRecord.breakfast.push(...meals.breakfast);
-        if (meals.lunch.length) existingRecord.lunch.push(...meals.lunch);
-        if (meals.dinner.length) existingRecord.dinner.push(...meals.dinner);
+        // Append new subscribers to existing records
+        if (meals.breakfast.veg.length)
+          existingRecord.breakfast.veg.push(...meals.breakfast.veg);
+        if (meals.breakfast.nonVeg.length)
+          existingRecord.breakfast.nonVeg.push(...meals.breakfast.nonVeg);
+        if (meals.lunch.veg.length)
+          existingRecord.lunch.veg.push(...meals.lunch.veg);
+        if (meals.lunch.nonVeg.length)
+          existingRecord.lunch.nonVeg.push(...meals.lunch.nonVeg);
+        if (meals.dinner.veg.length)
+          existingRecord.dinner.veg.push(...meals.dinner.veg);
+        if (meals.dinner.nonVeg.length)
+          existingRecord.dinner.nonVeg.push(...meals.dinner.nonVeg);
         await existingRecord.save();
       } else {
+        // Create new meal record
         await Mealrecord.create({
           Vendor_id: vendorId,
           date: today,
@@ -68,6 +105,7 @@ const fetchAndStoreMeals = async () => {
         });
       }
     }
+
     console.log("Meal records updated successfully!");
   } catch (error) {
     console.error("Error fetching and storing meals:", error);
@@ -79,9 +117,12 @@ router.get("/mealcount", isauthenticated, async (req, res) => {
     if (!req.Vendor || !req.Vendor.Vendor_id) {
       return res.status(400).json({ message: "Vendor ID missing in request." });
     }
-    
+
     const today = new Date().toISOString().split("T")[0];
-    const mealdata = await Mealrecord.find({ Vendor_id: req.Vendor.Vendor_id, date: today });
+    const mealdata = await Mealrecord.find({
+      Vendor_id: req.Vendor.Vendor_id,
+      date: today,
+    });
     res.status(200).json(mealdata);
   } catch (error) {
     console.error("Error fetching meal records:", error);
@@ -108,7 +149,7 @@ cron.schedule("0 4,18 * * *", () => {
   fetchAndStoreMeals();
 });
 
-cron.schedule("45 10 * * *", () => {
+cron.schedule("44 14 * * *", () => {
   console.log("Running scheduled meal count fetch at 11:48 AM...");
   fetchAndStoreMeals();
 });
@@ -117,14 +158,25 @@ router.post("/addgroup", async (req, res) => {
   try {
     const { user_id, deliverygroup } = req.body;
     if (!user_id || !deliverygroup) {
-      return res.status(400).json({ message: "Client ID and delivery address are required" });
+      return res
+        .status(400)
+        .json({ message: "Client ID and delivery address are required" });
     }
 
-    const result = await Subscriber.updateMany({ user_id }, { $set: { deliverygroup } });
+    const result = await Subscriber.updateMany(
+      { user_id },
+      { $set: { deliverygroup } }
+    );
     if (result.matchedCount === 0) {
       return res.status(404).json({ message: "Client not found" });
     }
-    res.status(200).json({ message: "Delivery address added successfully", matchedDocuments: result.matchedCount, modifiedDocuments: result.modifiedCount });
+    res
+      .status(200)
+      .json({
+        message: "Delivery address added successfully",
+        matchedDocuments: result.matchedCount,
+        modifiedDocuments: result.modifiedCount,
+      });
   } catch (error) {
     console.error("Error adding delivery group:", error);
     res.status(500).json({ message: "Server error" });
