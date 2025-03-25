@@ -17,7 +17,8 @@ import deliveryRoute from './routes/delivery/deliveryportal.js';
 import historyRoute from './routes/vendors/history.js';
 import messageRoute from './routes/vendors/message.js';
 import feedbackroute from './routes/clients/feedback.js'
-import clientmanageRoute from  './routes/clientmanagement.js'
+import clientmanageRoute from  './routes/clientmanagement.js';
+import expenseRoute from './routes/vendors/expense.js'
 config();
 import cookieParser from "cookie-parser";
 
@@ -71,7 +72,9 @@ mongoose.connect(uri)
     app.use('/api',historyRoute);
     app.use ('/api',messageRoute);
     app.use('/api',feedbackroute);
-    app.use('/api',clientmanageRoute)
+    app.use('/api',clientmanageRoute);
+    app.use('/api',expenseRoute);
+    
 
     
     // Start Server
