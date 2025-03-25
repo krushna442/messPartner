@@ -1,21 +1,10 @@
 import mongoose from "mongoose";
-
-const mealrecordSchema = new mongoose.Schema({
-    Vendor_id: { type: String, required: true },
-    date: { type: Date, required: true },
-    breakfast: {
-        veg: { type: [String], default: [] }, // Array of user IDs for veg meals
-        nonVeg: { type: [String], default: [] } // Array of user IDs for non-veg meals
-    },
-    lunch: {
-        veg: { type: [String], default: [] },
-        nonVeg: { type: [String], default: [] }
-    },
-    dinner: {
-        veg: { type: [String], default: [] },
-        nonVeg: { type: [String], default: [] }
-    }
-});
-
-const Mealrecord = mongoose.model("Mealrecord", mealrecordSchema);
+ const mealrecordschema= mongoose.Schema({
+    Vendor_id:{type:String,required:true},
+    date: {type:Date,required:true},
+    breakfast:{type:Array},
+    lunch:{type:Array},
+    dinner:{type:Array}
+    });
+const Mealrecord=mongoose.model("Mealrecord",mealrecordschema);
 export default Mealrecord;
