@@ -29,12 +29,19 @@ router.get('/vendor/profit', isauthenticated, async (req, res) => {
         const currentMonth = now.getMonth() + 1;
         const currentYear = now.getFullYear();
 
-        // **Step 1: Fetch Expenses & Expense List**
-        const expenses = await Expense.find({ Vendor_id }).select('expenseData -_id');
-        const expenseList = expenses.map(exp => exp.expenseData);
+        // **Step 1: Fetch Expenses for the Current Month**
+        const expenses = await Expense.find({
+            Vendor_id,
+            createdAt: {
+                $gte: new Date(`${currentYear}-${currentMonth}-01`), // Start of the month
+                $lt: new Date(`${currentYear}-${currentMonth + 1}-01`) // Start of next month
+            }
+        }).select('expenseData -_id');
 
-        // Calculate total expense
-        const totalExpense = expenseList.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
+        // Extract expense amounts and sum them
+        const totalExpense = expenses.reduce((sum, exp) => {
+            return sum + (exp.expenseData.amount ? Number(exp.expenseData.amount) : 0);
+        }, 0);
 
         // **Step 2: Fetch Subscribers for the Current Month**
         const subscribers = await Subscriber.find({
@@ -54,7 +61,6 @@ router.get('/vendor/profit', isauthenticated, async (req, res) => {
         // **Step 4: Respond with Data**
         res.status(200).json({
             message: "Profit data fetched successfully",
-            expenseList,
             totalExpense,
             totalSubscriptionValue,
             profit
@@ -64,6 +70,7 @@ router.get('/vendor/profit', isauthenticated, async (req, res) => {
         res.status(500).json({ message: "Error fetching profit data", error: error.message });
     }
 });
+
 
 
 export default router;
