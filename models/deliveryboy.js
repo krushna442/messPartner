@@ -5,6 +5,6 @@ const deliverySchema = new mongoose.Schema({
     phone:{type:String,unique:true},
     Vendor_id:String,
 });
-const Delivery = mongoose.model("Delivery", deliverySchema);
+const Deliveryboy = mongoose.model("Delivery", deliverySchema);
 
-export default Delivery;
+export default Deliveryboy;

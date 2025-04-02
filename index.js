@@ -19,7 +19,8 @@ import messageRoute from './routes/vendors/message.js';
 import feedbackroute from './routes/clients/feedback.js'
 import clientmanageRoute from  './routes/clientmanagement.js';
 import expenseRoute from './routes/vendors/expense.js';
-import monthlyreportRoute from './routes/vendors/monthlyreport.js'
+import monthlyreportRoute from './routes/vendors/monthlyreport.js';
+import assigndeliveryRoute from  './routes/vendors/assigndelivery.js'
 config();
 import cookieParser from "cookie-parser";
 
@@ -76,7 +77,7 @@ mongoose.connect(uri)
     app.use('/api',clientmanageRoute);
     app.use('/api',expenseRoute);
     app.use('/api',monthlyreportRoute)
-    
+    app.use ('/api',assigndeliveryRoute);
 
     
     // Start Server

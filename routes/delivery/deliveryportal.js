@@ -1,7 +1,7 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import Subscriber from "../../models/subscriber.js";
-import Delivery from "../../models/deliveryboy.js";
+import Deliveryboy from "../../models/deliveryboy.js";
 import Mealrecord from "../../models/mealrecord.js";
 import isauthenticated from "../../utils/authmiddlewware.js";
 import Client from "../../models/Client.js";
@@ -13,7 +13,7 @@ const router = express.Router();
 router.post('/delivery/login', async (req, res) => {
     try {
         const { phone, Vendor_id } = req.body;
-        const deliveryboy = await Delivery.findOne({ phone, Vendor_id });
+        const deliveryboy = await Deliveryboy.findOne({ phone, Vendor_id });
 
         if (!deliveryboy) {
             return res.status(400).json({ message: "Invalid phone number or vendor ID" });
@@ -41,7 +41,7 @@ router.post('/delivery/login', async (req, res) => {
 router.post('/delivery/register', async (req, res) => {
     try {
         const { name, phone, Vendor_id } = req.body;
-        await Delivery.create({ name, phone, Vendor_id });
+        await Deliveryboy.create({ name, phone, Vendor_id });
 
         res.status(201).json({ message: "Delivery boy registered successfully" });
     } catch (error) {

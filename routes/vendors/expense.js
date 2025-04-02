@@ -32,12 +32,11 @@ router.get('/vendor/profit', isauthenticated, async (req, res) => {
         // **Step 1: Fetch Expenses for the Current Month**
         const expenses = await Expense.find({
             Vendor_id,
-            createdAt: {
+            "expenseData.date": {
                 $gte: new Date(`${currentYear}-${currentMonth}-01`), // Start of the month
                 $lt: new Date(`${currentYear}-${currentMonth + 1}-01`) // Start of next month
             }
-        }).select('expenseData -_id');
-
+        });
         // Extract expense amounts and sum them
         const totalExpense = expenses.reduce((sum, exp) => {
             return sum + (exp.expenseData.amount ? Number(exp.expenseData.amount) : 0);

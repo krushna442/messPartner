@@ -8,12 +8,11 @@ const router = express.Router();
 dotenv.config();
 
 router.post("/subscribtion", isAuthenticated, async (req, res) => {
-  const { user_id, Vendor_id, subscriptionType, mealtype, address1, address2 } =
-    req.body;
+  const { user_id, Vendor_id, subscriptionType, mealtype, address1, address2 } =req.body;
   const totalMeal = subscriptionType;
   try {
     const subscriptionDate = Date.now();
-    const subscriptionEndDate = subscriptionDate + totalMeal * 86400000;
+    const subscriptionEndDate = new Date(subscriptionDate + totalMeal * 86400000);
 
     const subscriber = new Subscriber({
       user_id: user_id,
@@ -59,7 +58,7 @@ router.post("/mealOff", async (req, res) => {
 
     // Toggle mealOption (true ↔ false)
     const updatedClient = await Subscriber.findOneAndUpdate(
-      { clientId: user_id },
+      { user_id },
       { $set: { mealOption: !subscriber.mealOption } }, // ✅ Toggles true ↔ false
       { new: true } // ✅ Returns the updated document
     );
