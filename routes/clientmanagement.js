@@ -41,25 +41,33 @@ router.get("/vendor/clients/exprired",isauthenticated, async (req, res) => {
   }
 });
 
-router.post("/vendor/clients/expiringsoon",isauthenticated, async (req, res) => {
+router.get("/vendor/clients/expiringsoon", isauthenticated, async (req, res) => {
   try {
-    const Vendor_id= req.Vendor.Vendor_id;
+    const Vendor_id = req.Vendor.Vendor_id;
+
+    // Set the start and end of the range properly
+    const now = new Date();
+    now.setHours(0, 0, 0, 0); // Start of today
 
     const threeDaysLater = new Date();
     threeDaysLater.setDate(threeDaysLater.getDate() + 3);
+    threeDaysLater.setHours(23, 59, 59, 999); // End of the third day
 
-    const expiringsoon = await Subscriber.find({
+    const expiringSoon = await Subscriber.find({
       subscriptionEndDate: {
-        $gte: new Date(), 
+        $gte: now, 
         $lte: threeDaysLater,
       },
-      Vendor_id:Vendor_id,
+      Vendor_id: Vendor_id,
       totalMeal: { $gt: 15 }, 
     });
+
+    res.json({ success: true, data: expiringSoon });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: error });
+    res.status(500).json({ success: false, message: error.message });
   }
 });
+
 
  export default router;
