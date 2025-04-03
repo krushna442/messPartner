@@ -5,14 +5,14 @@ const router = express.Router();
 
 router.post("/add/menu", async (req, res) => {
   try {
-    const { meals, Vendor_id, type, packageType } = req.body;
+    const { meals, Vendor_id, type } = req.body;
 
-    if (!Vendor_id || !type || !packageType) {
-      return res.status(400).json({ message: "Vendor_id, type, and packageType are required" });
+    if (!Vendor_id || !type) {
+      return res.status(400).json({ message: "Vendor_id, type are required" });
     }
 
-    // Check if a menu already exists for this vendor, type, and packageType
-    let existingMenu = await Menu.findOne({ Vendor_id, type, packageType });
+    // Check if a menu already exists for this vendor, type
+    let existingMenu = await Menu.findOne({ Vendor_id, type });
 
     // Default empty menu structure
     let menu = existingMenu
@@ -42,8 +42,8 @@ router.post("/add/menu", async (req, res) => {
       await existingMenu.save();
       return res.status(200).json({ message: "Weekly menu updated", existingMenu });
     } else {
-      // Save new menu with type and packageType
-      const newMenu = new Menu({ Vendor_id, type, packageType, menu });
+      // Save new menu with type
+      const newMenu = new Menu({ Vendor_id, type, menu });
       await newMenu.save();
       return res.status(201).json({ message: "Weekly menu added", newMenu });
     }
@@ -52,14 +52,14 @@ router.post("/add/menu", async (req, res) => {
   }
 });
 
-// Get menu for a specific vendor, type, and packageType
-router.get("/menu/:vendorId/:type/:packageType", async (req, res) => {
+// Get menu for a specific vendor, type
+router.get("/menu/:vendorId/:type", async (req, res) => {
   try {
-    const { vendorId, type, packageType } = req.params;
-    const menu = await Menu.findOne({ Vendor_id: vendorId, type, packageType });
+    const { vendorId, type,  } = req.params;
+    const menu = await Menu.findOne({ Vendor_id: vendorId, type});
 
     if (!menu) {
-      return res.status(404).json({ message: "Menu not found for this vendor, type, and packageType" });
+      return res.status(404).json({ message: "Menu not found for this vendor, " });
     }
 
     res.status(200).json(menu);
