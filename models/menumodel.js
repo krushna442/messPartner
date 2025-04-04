@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 
 const menuSchema = new mongoose.Schema({
   Vendor_id: { type: String },
-  type:{type:String},
+  mealType:{type:String},
   packageType:{type:String},
   menu: {
     monday: { breakfast: String, lunch: String, dinner: String },

@@ -5,14 +5,9 @@ const router = express.Router();
 
 router.post("/add/menu", async (req, res) => {
   try {
-    const { meals, Vendor_id, type } = req.body;
-
-    if (!Vendor_id || !type) {
-      return res.status(400).json({ message: "Vendor_id, type are required" });
-    }
-
+    const { meals, Vendor_id, mealType ,packageType} = req.body;
     // Check if a menu already exists for this vendor, type
-    let existingMenu = await Menu.findOne({ Vendor_id, type });
+    let existingMenu = await Menu.findOne({ Vendor_id, mealType });
 
     // Default empty menu structure
     let menu = existingMenu
@@ -28,11 +23,11 @@ router.post("/add/menu", async (req, res) => {
         };
 
     // Populate menu based on received data
-    meals.forEach(({ day, mealType, item }) => {
+    meals.forEach(({ day, type, item }) => {
       let dayLower = day.toLowerCase();
-      let mealTypeLower = mealType.toLowerCase();
-      if (menu[dayLower] && menu[dayLower][mealTypeLower] !== undefined) {
-        menu[dayLower][mealTypeLower] = item;
+      let typelower = type.toLowerCase();
+      if (menu[dayLower] && menu[dayLower][typelower] !== undefined) {
+        menu[dayLower][typelower] = item;
       }
     });
 
@@ -43,7 +38,7 @@ router.post("/add/menu", async (req, res) => {
       return res.status(200).json({ message: "Weekly menu updated", existingMenu });
     } else {
       // Save new menu with type
-      const newMenu = new Menu({ Vendor_id, type, menu });
+      const newMenu = new Menu({ Vendor_id, mealType, menu,packageType });
       await newMenu.save();
       return res.status(201).json({ message: "Weekly menu added", newMenu });
     }
@@ -53,10 +48,10 @@ router.post("/add/menu", async (req, res) => {
 });
 
 // Get menu for a specific vendor, type
-router.get("/menu/:vendorId/:type", async (req, res) => {
+router.post("/show/menu", async (req, res) => {
   try {
-    const { vendorId, type,  } = req.params;
-    const menu = await Menu.findOne({ Vendor_id: vendorId, type});
+    const { Vendor_id, mealType, packageType  } = req.body;
+    const menu = await Menu.findOne({ Vendor_id: Vendor_id, mealType,packageType});
 
     if (!menu) {
       return res.status(404).json({ message: "Menu not found for this vendor, " });
