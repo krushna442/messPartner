@@ -70,33 +70,72 @@ router.post("/updateprofile/contact", isauthenticated, async (req, res) => {
       .json({ message: "Internal Server Error", error: error.message });
   }
 });
-router.post("/updateprofile/mealdetail", isauthenticated, async (req, res) => {
+router.post("/updateprofile/subscriptiontype", isauthenticated, async (req, res) => {
   try {
-    const vendorDetails = await Vendor.findOne({
-      Vendor_id: req.Vendor.Vendor_id,
-    });
-    if (!vendorDetails) {
+    const vendor = await Vendor.findOne({ Vendor_id: req.Vendor.Vendor_id });
+
+    if (!vendor) {
       return res.status(404).json({ message: "Vendor not found" });
     }
-    const { subscriptiontype, mealtype } = req.body;
-    if (!subscriptiontype || !mealtype) {
-      return res.status(400).json({ message: "Please fill all the fields" });
+
+    const { packageName, price } = req.body;
+
+    if (!packageName || price === undefined) {
+      return res.status(400).json({ message: "Package name and price are required" });
     }
-    // Update vendor details
-    vendorDetails.subscriptiontype = subscriptiontype;
-    vendorDetails.mealtype = mealtype;
-    await vendorDetails.save();
-    res
-      .status(201)
-      .json({
-        message: "meal detail added succesfully",
-        vendorDetails: vendorDetails,
-      });
+
+    // Ensure subscriptiontype is initialized
+    if (!vendor.subscriptiontype) {
+      vendor.subscriptiontype = new Map();
+    }
+
+    // Add or update package
+    vendor.subscriptiontype.set(packageName, price);
+    await vendor.save();
+
+    return res.status(200).json({
+      message: `Subscription package '${packageName}' added/updated successfully`,
+      subscriptiontype: vendor.subscriptiontype,
+    });
+
   } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Internal Server Error", error: error.message });
+    return res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 });
+
+
+router.delete("/updateprofile/subscriptiontype", isauthenticated, async (req, res) => {
+  try {
+    const vendor = await Vendor.findOne({ Vendor_id: req.Vendor.Vendor_id });
+
+    if (!vendor) {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
+
+    const { packageName } = req.body;
+
+    if (!packageName) {
+      return res.status(400).json({ message: "Package name is required" });
+    }
+
+    // Check if package exists
+    if (!vendor.subscriptiontype.has(packageName)) {
+      return res.status(404).json({ message: `Package '${packageName}' not found` });
+    }
+
+    // Remove package
+    vendor.subscriptiontype.delete(packageName);
+    await vendor.save();
+
+    return res.status(200).json({
+      message: `Subscription package '${packageName}' deleted successfully`,
+      subscriptiontype: vendor.subscriptiontype,
+    });
+
+  } catch (error) {
+    return res.status(500).json({ message: "Internal Server Error", error: error.message });
+  }
+});
+
 
 export default router;

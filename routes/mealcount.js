@@ -125,7 +125,7 @@ const fetchAndStoreMeals = async () => {
                   ? vendorMeals[Vendor_id].breakfast.veg.push(user_id)
                   : vendorMeals[Vendor_id].breakfast.nonVeg.push(user_id);
               subscriber.receivedBreakfast += 1;
-          } else if (currentHour >= 10 && currentHour < 18) {
+          } else if (currentHour >= 10 && currentHour < 17) {
               // Lunch Time
               isVeg
                   ? vendorMeals[Vendor_id].lunch.veg.push(user_id)
@@ -218,12 +218,12 @@ router.post("/userdetail", async (req, res) => {
   }
 });
 
-cron.schedule("0 4,18 * * *", () => {
+cron.schedule("0 4  * * *", () => {
   console.log("Running scheduled meal count fetch at 4 AM & 6 PM...");
   fetchAndStoreMeals();
 });
 
-cron.schedule("46 14 * * *", () => {
+cron.schedule("22 10 * * *", () => {
   console.log("Running scheduled meal count fetch at 11:48 AM...");
   fetchAndStoreMeals();
 });
