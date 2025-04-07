@@ -7,7 +7,7 @@ router.post("/add/menu", async (req, res) => {
   try {
     const { meals, Vendor_id, mealType ,packageType} = req.body;
     // Check if a menu already exists for this vendor, type
-    let existingMenu = await Menu.findOne({ Vendor_id, mealType });
+    let existingMenu = await Menu.findOne({ Vendor_id, mealType ,packageType});
 
     // Default empty menu structure
     let menu = existingMenu
