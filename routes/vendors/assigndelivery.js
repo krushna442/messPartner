@@ -3,10 +3,11 @@ import Mealrecord from "../../models/mealrecord.js";
 import Subscriber from "../../models/subscriber.js";
 import DeliveryList from "../../models/DeliveryList.js";
 import isauthenticated from "../../utils/authmiddlewware.js";
+import Vendor from "../../models/Vendor.js";
 
 const router = express.Router();
 
-router.get("/vendor/deliverylist",isauthenticated, async (req, res) => {
+router.get("/vendor/deliverylist", isauthenticated, async (req, res) => {
   try {
     const { Vendor_id } = req.Vendor;
 
@@ -18,7 +19,6 @@ router.get("/vendor/deliverylist",isauthenticated, async (req, res) => {
 
     // Fetch meal record for today
     const mealdata = await Mealrecord.findOne({ Vendor_id, date: today });
-
     if (!mealdata) {
       return res.status(404).json({ message: "No meal data found for today." });
     }
@@ -72,14 +72,12 @@ router.get("/vendor/deliverylist",isauthenticated, async (req, res) => {
       });
     });
 
-    // Prepare structured data for DB
     const deliveryGroups = Object.keys(groupedData).map(group => ({
       groupName: group,
       veg: groupedData[group].veg,
       nonVeg: groupedData[group].nonVeg
     }));
 
-    // Save to database
     const deliveryList = new DeliveryList({
       Vendor_id,
       date: today,
@@ -88,6 +86,13 @@ router.get("/vendor/deliverylist",isauthenticated, async (req, res) => {
     });
 
     await deliveryList.save();
+
+    const totalDeliveries = vegUserIds.length + nonVegUserIds.length;
+
+    await Vendor.updateOne(
+      { Vendor_id },
+      { $inc: { mealToDeliver: -totalDeliveries } }
+    );
 
     res.status(201).json({
       message: "Delivery list grouped and stored successfully.",

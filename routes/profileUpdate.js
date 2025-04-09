@@ -78,19 +78,26 @@ router.post("/updateprofile/subscriptiontype", isauthenticated, async (req, res)
       return res.status(404).json({ message: "Vendor not found" });
     }
 
-    const { packageName, price } = req.body;
+    const { packageName, price, mealtype } = req.body;
 
-    if (!packageName || price === undefined) {
-      return res.status(400).json({ message: "Package name and price are required" });
+    if (!packageName || !mealtype || price === undefined) {
+      return res.status(400).json({ message: "Package name, price, and mealtype are required" });
     }
 
-    // Ensure subscriptiontype is initialized
-    if (!vendor.subscriptiontype) {
-      vendor.subscriptiontype = new Map();
+    // Check if the package already exists
+    const existingIndex = vendor.subscriptiontype.findIndex(
+      (pkg) => pkg.packageName === packageName
+    );
+
+    if (existingIndex !== -1) {
+      // Update existing package
+      vendor.subscriptiontype[existingIndex].price = price;
+      vendor.subscriptiontype[existingIndex].mealtype = mealtype;
+    } else {
+      // Add new package
+      vendor.subscriptiontype.push({ packageName, price, mealtype });
     }
 
-    // Add or update package
-    vendor.subscriptiontype.set(packageName, price);
     await vendor.save();
 
     return res.status(200).json({
@@ -102,6 +109,7 @@ router.post("/updateprofile/subscriptiontype", isauthenticated, async (req, res)
     return res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 });
+
 
 
 router.delete("/updateprofile/subscriptiontype", isauthenticated, async (req, res) => {
@@ -118,13 +126,17 @@ router.delete("/updateprofile/subscriptiontype", isauthenticated, async (req, re
       return res.status(400).json({ message: "Package name is required" });
     }
 
-    // Check if package exists
-    if (!vendor.subscriptiontype.has(packageName)) {
+    const initialLength = vendor.subscriptiontype.length;
+
+    // Remove the package with the given name
+    vendor.subscriptiontype = vendor.subscriptiontype.filter(
+      (pkg) => pkg.packageName !== packageName
+    );
+
+    if (vendor.subscriptiontype.length === initialLength) {
       return res.status(404).json({ message: `Package '${packageName}' not found` });
     }
 
-    // Remove package
-    vendor.subscriptiontype.delete(packageName);
     await vendor.save();
 
     return res.status(200).json({
@@ -136,6 +148,7 @@ router.delete("/updateprofile/subscriptiontype", isauthenticated, async (req, re
     return res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 });
+
 
 
 export default router;
