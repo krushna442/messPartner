@@ -14,7 +14,7 @@ router.post('/findVendor', async (req, res) => {
             return res.status(400).json({ message: "Area is required" });
         }
 
-        const vendors = await Vendor.find({ service: { $regex: new RegExp(area, "i") } });
+        const vendors = await Vendor.find({ location: { $regex: new RegExp(area, "i") } });
 
         if (vendors.length === 0) {
             return res.status(404).json({ message: "No vendors found in this area" });
