@@ -6,6 +6,7 @@ const paymentSchema = mongoose.Schema({
     image: String,
     user_id: String,
     Vendor_id:String,
+    amount:Number,
     name: String,
     phone: String
 }, { timestamps: true });
