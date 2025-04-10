@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { type } from 'os';
 
 const subscriptionTypeSchema = new mongoose.Schema({
   packageName: { type: String, required: true },
@@ -22,7 +23,8 @@ const vendorSchema = new mongoose.Schema({
   shoplocation: { type: String },
   contactmobile: { type: Number },
   whatsapp: { type: Number },
-  mealToDeliver: { type: Number }
+  mealToDeliver: { type: Number },
+  scanner :{type:String}
 }, { timestamps: true });
 
 const Vendor = mongoose.model("Vendor", vendorSchema);

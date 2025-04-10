@@ -2,6 +2,7 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import Vendor from "../models/Vendor.js";
 import isauthenticated from "../utils/authmiddlewware.js";
+import multer from 'multer';
 
 const router = express.Router();
 router.use(express.json());
@@ -148,5 +149,39 @@ router.delete("/updateprofile/subscriptiontype", isauthenticated, async (req, re
 });
 
 
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+
+router.post('/add/scanner', upload.single("scanner"), isauthenticated, async (req, res) => {
+  try {
+    const vendor = await Vendor.findOne({ Vendor_id: req.Vendor.Vendor_id });
+
+    if (!vendor) {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const imageBase64 = req.file.buffer.toString("base64");
+    vendor.scanner = imageBase64;
+
+    await vendor.save();
+
+    return res.status(200).json({
+      message: "Scanner added successfully",
+      scanner: vendor.scanner
+    });
+
+  } catch (error) {
+    console.error("Error adding scanner:", error);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      error: error.message
+    });
+  }
+});
 
 export default router;

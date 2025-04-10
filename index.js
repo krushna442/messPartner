@@ -20,7 +20,8 @@ import feedbackroute from './routes/clients/feedback.js'
 import clientmanageRoute from  './routes/clientmanagement.js';
 import expenseRoute from './routes/vendors/expense.js';
 import monthlyreportRoute from './routes/vendors/monthlyreport.js';
-import assigndeliveryRoute from  './routes/vendors/assigndelivery.js'
+import assigndeliveryRoute from  './routes/vendors/assigndelivery.js';
+import paymentRoute from './routes/vendors/payment.js'
 config();
 import cookieParser from "cookie-parser";
 
@@ -78,7 +79,7 @@ mongoose.connect(uri)
     app.use('/api',expenseRoute);
     app.use('/api',monthlyreportRoute)
     app.use ('/api',assigndeliveryRoute);
-
+    app.use ('/api',paymentRoute);
     
     // Start Server
 app.listen(PORT, () => {
