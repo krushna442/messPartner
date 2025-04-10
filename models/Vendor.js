@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const subscriptionTypeSchema = new mongoose.Schema({
   packageName: { type: String, required: true },
   price: { type: Number, required: true },
-  mealtype: [{ type: String, required: true }] // Array of meal types
+  meals: [{ type: String, required: true }] // Array of meal types
 }, { _id: false }); // prevent automatic _id creation for subdocuments
 
 const vendorSchema = new mongoose.Schema({

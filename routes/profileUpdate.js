@@ -70,7 +70,7 @@ router.post("/updateprofile/contact", isauthenticated, async (req, res) => {
       .json({ message: "Internal Server Error", error: error.message });
   }
 });
-router.post("/updateprofile/subscriptiontype", isauthenticated, async (req, res) => {
+router.post("/updateprofile/subscriptiontype", isauthenticated, async (req, res) => { 
   try {
     const vendor = await Vendor.findOne({ Vendor_id: req.Vendor.Vendor_id });
 
@@ -78,24 +78,21 @@ router.post("/updateprofile/subscriptiontype", isauthenticated, async (req, res)
       return res.status(404).json({ message: "Vendor not found" });
     }
 
-    const { packageName, price, mealtype } = req.body;
+    const { packageName, price, meals } = req.body;
 
-    if (!packageName || !mealtype || price === undefined) {
-      return res.status(400).json({ message: "Package name, price, and mealtype are required" });
+    if (!packageName || !meals || price === undefined) {
+      return res.status(400).json({ message: "Package name, price, and meals are required" });
     }
 
-    // Check if the package already exists
     const existingIndex = vendor.subscriptiontype.findIndex(
       (pkg) => pkg.packageName === packageName
     );
 
     if (existingIndex !== -1) {
-      // Update existing package
       vendor.subscriptiontype[existingIndex].price = price;
-      vendor.subscriptiontype[existingIndex].mealtype = mealtype;
+      vendor.subscriptiontype[existingIndex].meals = meals; // ✅ Fixed here
     } else {
-      // Add new package
-      vendor.subscriptiontype.push({ packageName, price, mealtype });
+      vendor.subscriptiontype.push({ packageName, price, meals });
     }
 
     await vendor.save();
@@ -109,6 +106,7 @@ router.post("/updateprofile/subscriptiontype", isauthenticated, async (req, res)
     return res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 });
+
 
 
 
