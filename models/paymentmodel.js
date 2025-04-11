@@ -6,6 +6,7 @@ const paymentSchema = mongoose.Schema({
     image: String,
     user_id: String,
     Vendor_id:String,
+    subscriptionType:String,
     amount:Number,
     name: String,
     phone: String
