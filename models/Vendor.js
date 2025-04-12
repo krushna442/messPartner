@@ -4,7 +4,8 @@ import { type } from 'os';
 const subscriptionTypeSchema = new mongoose.Schema({
   packageName: { type: String, required: true },
   price: { type: Number, required: true },
-  meals: [{ type: String, required: true }] // Array of meal types
+  meals: [{ type: String, required: true }],
+  days:[{type:Number}]
 }, { _id: false }); // prevent automatic _id creation for subdocuments
 
 const vendorSchema = new mongoose.Schema({

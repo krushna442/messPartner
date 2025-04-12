@@ -79,7 +79,7 @@ router.post("/updateprofile/subscriptiontype", isauthenticated, async (req, res)
       return res.status(404).json({ message: "Vendor not found" });
     }
 
-    const { packageName, price, meals } = req.body;
+    const { packageName, price, meals, days } = req.body;
 
     if (!packageName || !meals || price === undefined) {
       return res.status(400).json({ message: "Package name, price, and meals are required" });
@@ -91,9 +91,10 @@ router.post("/updateprofile/subscriptiontype", isauthenticated, async (req, res)
 
     if (existingIndex !== -1) {
       vendor.subscriptiontype[existingIndex].price = price;
-      vendor.subscriptiontype[existingIndex].meals = meals; // ✅ Fixed here
+      vendor.subscriptiontype[existingIndex].meals = meals;
+      vendor.subscriptiontype[existingIndex].days = days; // ✅ Update days too
     } else {
-      vendor.subscriptiontype.push({ packageName, price, meals });
+      vendor.subscriptiontype.push({ packageName, price, meals, days }); // ✅ Add new entry with days
     }
 
     await vendor.save();
@@ -107,6 +108,7 @@ router.post("/updateprofile/subscriptiontype", isauthenticated, async (req, res)
     return res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 });
+
 
 
 
