@@ -150,7 +150,73 @@ router.delete("/updateprofile/subscriptiontype", isauthenticated, async (req, re
   }
 });
 
+// Route to add meal type
+router.post("/updateprofile/add/mealtype", isauthenticated, async (req, res) => {
+  try {
+    const vendor = await Vendor.findOne({ Vendor_id: req.Vendor.Vendor_id });
+    const { mealtype } = req.body;
 
+    if (!vendor) {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
+
+    if (!mealtype) {
+      return res.status(400).json({ message: "Meal type is required" });
+    }
+
+    // Avoid duplicate meal types
+    if (vendor.mealtype.includes(mealtype)) {
+      return res.status(409).json({ message: `Meal type '${mealtype}' already exists.` });
+    }
+
+    vendor.mealtype.push(mealtype);
+    await vendor.save();
+
+    return res.status(200).json({
+      message: `Meal type '${mealtype}' added successfully`,
+      mealtype: vendor.mealtype,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Internal Server Error",
+      error: error.message
+    });
+  }
+});
+
+
+// Route to add subscription days
+router.post('/add/days', isauthenticated, async (req, res) => {
+  try {
+    const vendor = await Vendor.findOne({ Vendor_id: req.Vendor.Vendor_id });
+    const { days } = req.body;
+
+    if (!vendor) {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
+
+    if (days === undefined || days === null) {
+      return res.status(400).json({ message: "Days are required" });
+    }
+
+    if (vendor.subscriptionDuration.includes(days)) {
+      return res.status(409).json({ message: `Days '${days}' already exists.` });
+    }
+
+    vendor.subscriptionDuration.push(days);
+    await vendor.save();
+
+    return res.status(200).json({
+      message: `Days '${days}' added successfully`,
+      subscriptionDuration: vendor.subscriptionDuration
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Internal Server Error",
+      error: error.message
+    });
+  }
+});
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
