@@ -3,12 +3,12 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import Subscriber from "../models/subscriber.js";
 import isAuthenticated from "../utils/clientauth.js";
-import Vendor from "../models/Vendor.js";
+import Vendor from "../models/Vendor.js"; // ✅ Correct (matches file name)
 const router = express.Router();
 dotenv.config();
 
 router.post("/subscribtion", isAuthenticated, async (req, res) => {
-  const { user_id, Vendor_id, subscriptionType, mealtype, address1, address2 } =req.body;
+  const { user_id, Vendor_id, subscriptionType, mealtype, address1, address2 ,VendorData} =req.body;
   const totalMeal = subscriptionType;
   try {
     const subscriptionDate = Date.now();
@@ -17,6 +17,7 @@ router.post("/subscribtion", isAuthenticated, async (req, res) => {
     const subscriber = new Subscriber({
       user_id: user_id,
       Vendor_id: Vendor_id,
+      VendorData:VendorData,
       mealtype: mealtype,
       user_name: req.user.name,
       number: req.user.number,
@@ -38,17 +39,16 @@ router.post("/subscribtion", isAuthenticated, async (req, res) => {
       { new: true }
     );
 
-    res.status(201).json({ message: "Subscription added successfully", subscriber });
+    res.status(201).json({ message: "Subscription added successfully", subscriber ,vendor });
   } catch (error) {
     console.error("Subscription error:", error);
     res.status(500).json({ error: "Internal Server Error", error });
   }
 });
 
-router.post("/mealOff", async (req, res) => {
+router.post("/mealOff",isAuthenticated, async (req, res) => {
   try {
-    const { user_id } = req.body;
-
+        const {user_id}= req.user;
     // Find the user first
     const subscriber = await Subscriber.findOne({ user_id });
 

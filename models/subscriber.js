@@ -5,6 +5,7 @@ const subscriberSchema = mongoose.Schema(
   {
     user_id: { type: String },
     Vendor_id: { type: String },
+    VendorData:{type:Object},   
     user_name:{type:String},
     number:{type:Number},
     subscriptionId: { type: String },
