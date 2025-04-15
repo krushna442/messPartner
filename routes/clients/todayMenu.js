@@ -15,11 +15,14 @@ router.get('/user/menu', isAuthenticated, async (req, res) => {
     const menus = [];
 
     for (const subscription of subscriptions) {
-      const menuDoc = await Menu.findOne({ 
-        Vendor_id: subscription.Vendor_id, 
-        packageType: new RegExp(`^${subscription.packageType}$`, 'i'), 
-        mealType: new RegExp(`^${subscription.mealtype}$`, 'i') // subscriber has `mealtype`, menu has `mealType`
-      });
+      const query = {
+        Vendor_id: new RegExp(`^${subscription.Vendor_id}$`, 'i'),
+        packageType: new RegExp(`^${subscription.packageType}$`, 'i'),
+        mealType: new RegExp(`^${subscription.mealtype}$`, 'i')
+      };
+
+      console.log("Querying menu with:", query);
+      const menuDoc = await Menu.findOne(query);
 
       if (menuDoc && menuDoc.menu[currentDay]) {
         menus.push({
@@ -30,6 +33,8 @@ router.get('/user/menu', isAuthenticated, async (req, res) => {
             [currentDay]: menuDoc.menu[currentDay]
           }
         });
+      } else {
+        console.log(`No menu found or no menu for day: ${currentDay}`);
       }
     }
 
@@ -39,5 +44,6 @@ router.get('/user/menu', isAuthenticated, async (req, res) => {
     res.status(500).json({ error: 'Something went wrong while fetching the menu' });
   }
 });
+
 
 export default router;

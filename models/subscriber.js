@@ -10,7 +10,7 @@ const subscriberSchema = mongoose.Schema(
     number:{type:Number},
     subscriptionId: { type: String },
     subscriptionType: {type:Number},
-    
+    packageType:{type:String},
     mealtype: { type: String },
     address1:{type:String},
     address2:{type:String},
