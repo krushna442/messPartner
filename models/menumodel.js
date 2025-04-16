@@ -6,15 +6,16 @@ const menuSchema = new mongoose.Schema({
   Vendor_id: { type: String, required: true },
   mealType: { type: String },
   packageType: { type: String },
-  menu: {
-    monday: { type: daySchema },
-    tuesday: { type: daySchema },
-    wednesday: { type: daySchema },
-    thursday: { type: daySchema },
-    friday: { type: daySchema },
-    saturday: { type: daySchema },
-    sunday: { type: daySchema },
-  },
+ menu: {
+  monday: { type: daySchema, default: {} },
+  tuesday: { type: daySchema, default: {} },
+  wednesday: { type: daySchema, default: {} },
+  thursday: { type: daySchema, default: {} },
+  friday: { type: daySchema, default: {} },
+  saturday: { type: daySchema, default: {} },
+  sunday: { type: daySchema, default: {} },
+},
+
 });
 
 const Menu = mongoose.model("Menu", menuSchema);

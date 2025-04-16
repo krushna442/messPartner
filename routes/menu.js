@@ -8,46 +8,28 @@ router.post("/add/menu", async (req, res) => {
   try {
     const { meals, Vendor_id, mealType, packageType } = req.body;
 
-    // Check if a menu already exists for this vendor, mealType and packageType
-    let existingMenu = await Menu.findOne({ Vendor_id, mealType, packageType });
-
-    let menu = existingMenu ? existingMenu.menu : {
-      monday: {},
-      tuesday: {},
-      wednesday: {},
-      thursday: {},
-      friday: {},
-      saturday: {},
-      sunday: {},
-    };
-
-    // Iterate through meals and update/create values dynamically
+    // Build update object dynamically
+    const updateFields = {};
     meals.forEach(({ day, type, item }) => {
-      const dayLower = day.toLowerCase();
-      const typeLower = type.toLowerCase();
-
-      // Ensure day exists
-      if (!menu[dayLower]) {
-        menu[dayLower] = {};
-      }
-
-      // Set or update the meal type
-      menu[dayLower][typeLower] = item;
+      const path = `menu.${day.toLowerCase()}.${type.toLowerCase()}`;
+      updateFields[path] = item;
     });
 
-    if (existingMenu) {
-      existingMenu.menu = menu;
-      await existingMenu.save();
-      return res.status(200).json({ message: "Weekly menu updated", existingMenu });
-    } else {
-      const newMenu = new Menu({ Vendor_id, mealType, packageType, menu });
-      await newMenu.save();
-      return res.status(201).json({ message: "Weekly menu added", newMenu });
-    }
+    const updated = await Menu.findOneAndUpdate(
+      { Vendor_id, mealType, packageType },
+      { $set: updateFields },
+      { new: true, upsert: true }
+    );
+
+    return res.status(200).json({ message: "Weekly menu updated", menu: updated });
   } catch (error) {
+    console.error("API ERROR:", error);
     res.status(500).json({ message: "Error adding/updating weekly menu", error: error.message });
   }
 });
+
+
+
 
 // Fetch menu
 router.post("/show/menu", async (req, res) => {
