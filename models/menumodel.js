@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const daySchema = new mongoose.Schema({}, { strict: false },{ _id: false });
+const daySchema = new mongoose.Schema({}, { _id: false, strict: false });
 
 const menuSchema = new mongoose.Schema({
   Vendor_id: { type: String, required: true },
