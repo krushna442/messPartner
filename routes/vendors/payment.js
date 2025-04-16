@@ -11,7 +11,7 @@ const router = express.Router();
 
 router.post('/create/payment', upload.single("image"), async (req, res) => {
     try {
-        const { Vendor_id,user_id,subscriptionType,amount, name, phone } = req.body;
+        const { Vendor_id,user_id,subscriptionType,amount, name, phone ,packageType} = req.body;
 
         if (!req.file) {
             return res.status(400).json({ message: "No file uploaded" });
@@ -24,6 +24,7 @@ router.post('/create/payment', upload.single("image"), async (req, res) => {
             user_id,
             Vendor_id,
             subscriptionType,
+            packageType,
             amount,
             name,
             phone

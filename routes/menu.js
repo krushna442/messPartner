@@ -3,42 +3,44 @@ import Menu from "../models/menumodel.js";
 
 const router = express.Router();
 
+// Add or update menu
 router.post("/add/menu", async (req, res) => {
   try {
-    const { meals, Vendor_id, mealType ,packageType} = req.body;
-    // Check if a menu already exists for this vendor, type
-    let existingMenu = await Menu.findOne({ Vendor_id, mealType ,packageType});
+    const { meals, Vendor_id, mealType, packageType } = req.body;
 
-    // Default empty menu structure
-    let menu = existingMenu
-      ? existingMenu.menu
-      : {
-          monday: { breakfast: "", lunch: "", dinner: "" },
-          tuesday: { breakfast: "", lunch: "", dinner: "" },
-          wednesday: { breakfast: "", lunch: "", dinner: "" },
-          thursday: { breakfast: "", lunch: "", dinner: "" },
-          friday: { breakfast: "", lunch: "", dinner: "" },
-          saturday: { breakfast: "", lunch: "", dinner: "" },
-          sunday: { breakfast: "", lunch: "", dinner: "" },
-        };
+    // Check if a menu already exists for this vendor, mealType and packageType
+    let existingMenu = await Menu.findOne({ Vendor_id, mealType, packageType });
 
-    // Populate menu based on received data
+    let menu = existingMenu ? existingMenu.menu : {
+      monday: {},
+      tuesday: {},
+      wednesday: {},
+      thursday: {},
+      friday: {},
+      saturday: {},
+      sunday: {},
+    };
+
+    // Iterate through meals and update/create values dynamically
     meals.forEach(({ day, type, item }) => {
-      let dayLower = day.toLowerCase();
-      let typelower = type.toLowerCase();
-      if (menu[dayLower] && menu[dayLower][typelower] !== undefined) {
-        menu[dayLower][typelower] = item;
+      const dayLower = day.toLowerCase();
+      const typeLower = type.toLowerCase();
+
+      // Ensure day exists
+      if (!menu[dayLower]) {
+        menu[dayLower] = {};
       }
+
+      // Set or update the meal type
+      menu[dayLower][typeLower] = item;
     });
 
     if (existingMenu) {
-      // Update the existing menu
       existingMenu.menu = menu;
       await existingMenu.save();
       return res.status(200).json({ message: "Weekly menu updated", existingMenu });
     } else {
-      // Save new menu with type
-      const newMenu = new Menu({ Vendor_id, mealType, menu,packageType });
+      const newMenu = new Menu({ Vendor_id, mealType, packageType, menu });
       await newMenu.save();
       return res.status(201).json({ message: "Weekly menu added", newMenu });
     }
@@ -47,14 +49,15 @@ router.post("/add/menu", async (req, res) => {
   }
 });
 
-// Get menu for a specific vendor, type
+// Fetch menu
 router.post("/show/menu", async (req, res) => {
   try {
-    const { Vendor_id, mealType, packageType  } = req.body;
-    const menu = await Menu.findOne({ Vendor_id: Vendor_id, mealType,packageType});
+    const { Vendor_id, mealType, packageType } = req.body;
+
+    const menu = await Menu.findOne({ Vendor_id, mealType, packageType });
 
     if (!menu) {
-      return res.status(404).json({ message: "Menu not found for this vendor, " });
+      return res.status(404).json({ message: "Menu not found for this vendor" });
     }
 
     res.status(200).json(menu);

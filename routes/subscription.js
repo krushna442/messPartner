@@ -8,7 +8,7 @@ const router = express.Router();
 dotenv.config();
 
 router.post("/subscribtion", isAuthenticated, async (req, res) => {
-  const { user_id, Vendor_id, subscriptionType, mealtype, address1, address2 ,VendorData} =req.body;
+  const { user_id, Vendor_id, subscriptionType, mealtype, address1, address2 ,VendorData ,packageType} =req.body;
   const totalMeal = subscriptionType;
   try {
     const subscriptionDate = Date.now();
@@ -19,6 +19,7 @@ router.post("/subscribtion", isAuthenticated, async (req, res) => {
       Vendor_id: Vendor_id,
       VendorData:VendorData,
       mealtype: mealtype,
+      packageType:packageType,
       user_name: req.user.name,
       number: req.user.number,
       address1: address1,
@@ -39,7 +40,7 @@ router.post("/subscribtion", isAuthenticated, async (req, res) => {
       { new: true }
     );
 
-    res.status(201).json({ message: "Subscription added successfully", subscriber ,vendor });
+    res.status(201).json({ message: "Subscription added successfully", subscriber });
   } catch (error) {
     console.error("Subscription error:", error);
     res.status(500).json({ error: "Internal Server Error", error });

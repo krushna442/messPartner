@@ -1,18 +1,19 @@
-
 import mongoose from "mongoose";
 
+const daySchema = new mongoose.Schema({}, { strict: false });
+
 const menuSchema = new mongoose.Schema({
-  Vendor_id: { type: String },
-  mealType:{type:String},
-  packageType:{type:String},
+  Vendor_id: { type: String, required: true },
+  mealType: { type: String },
+  packageType: { type: String },
   menu: {
-    monday: { breakfast: String, lunch: String, dinner: String },
-    tuesday: { breakfast: String, lunch: String, dinner: String },
-    wednesday: { breakfast: String, lunch: String, dinner: String },
-    thursday: { breakfast: String, lunch: String, dinner: String },
-    friday: { breakfast: String, lunch: String, dinner: String },
-    saturday: { breakfast: String, lunch: String, dinner: String },
-    sunday: { breakfast: String, lunch: String, dinner: String },
+    monday: { type: daySchema },
+    tuesday: { type: daySchema },
+    wednesday: { type: daySchema },
+    thursday: { type: daySchema },
+    friday: { type: daySchema },
+    saturday: { type: daySchema },
+    sunday: { type: daySchema },
   },
 });
 
