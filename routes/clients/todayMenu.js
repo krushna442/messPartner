@@ -21,7 +21,6 @@ router.get('/user/menu', isAuthenticated, async (req, res) => {
         mealType: new RegExp(`^${subscription.mealtype}$`, 'i')
       };
 
-      console.log("Querying menu with:", query);
       const menuDoc = await Menu.findOne(query);
 
       if (menuDoc && menuDoc.menu[currentDay]) {
@@ -42,6 +41,41 @@ router.get('/user/menu', isAuthenticated, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Something went wrong while fetching the menu' });
+  }
+});
+
+router.get('/user/fullmenu', isAuthenticated, async (req, res) => {
+  try {
+    const { user_id } = req.user;
+    const subscriptions = await Subscriber.find({ user_id });
+
+    const fullMenus = [];
+
+    for (const subscription of subscriptions) {
+      const query = {
+        Vendor_id: new RegExp(`^${subscription.Vendor_id}$`, 'i'),
+        packageType: new RegExp(`^${subscription.packageType}$`, 'i'),
+        mealType: new RegExp(`^${subscription.mealtype}$`, 'i')
+      };
+
+      const menuDoc = await Menu.findOne(query);
+
+      if (menuDoc && menuDoc.menu) {
+        fullMenus.push({
+          Vendor_id: subscription.Vendor_id,
+          mealType: menuDoc.mealType,
+          packageType: menuDoc.packageType,
+          menu: menuDoc.menu // full weekly menu
+        });
+      } else {
+        console.log(`No full menu found for Vendor_id: ${subscription.Vendor_id}`);
+      }
+    }
+
+    res.json(fullMenus);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Something went wrong while fetching the full menu' });
   }
 });
 
