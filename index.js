@@ -23,6 +23,7 @@ import monthlyreportRoute from './routes/vendors/monthlyreport.js';
 import assigndeliveryRoute from  './routes/vendors/assigndelivery.js';
 import paymentRoute from './routes/vendors/payment.js';
 import todaymenuRoute from './routes/clients/todayMenu.js';
+import wishlistROute from './routes/clients/wishlist.js';
 config();
 import cookieParser from "cookie-parser";
 
@@ -82,6 +83,7 @@ mongoose.connect(uri)
     app.use ('/api',assigndeliveryRoute);
     app.use ('/api',paymentRoute);
     app.use('/api',todaymenuRoute);
+    app.use('/api',wishlistROute)
     
     // Start Server
 app.listen(PORT, () => {

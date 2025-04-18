@@ -16,7 +16,7 @@ router.post('/user/feedback', isAuthenticated, upload.single('image'), async (re
     try {
         // ✅ Ensure body fields are properly extracted
         const { Vendor_id, feedback, rating } = req.body;
-        const { user_id, name } = req.user;
+        const { user_id, name,number } = req.user;
 
         // ✅ Ensure feedback and rating exist
         if (!Vendor_id || !feedback || !rating) {
@@ -39,6 +39,7 @@ router.post('/user/feedback', isAuthenticated, upload.single('image'), async (re
             rating: numericRating, 
             user_id, 
             name, 
+            number  ,
             image: imageBase64 
         });
 
