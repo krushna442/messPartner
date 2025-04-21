@@ -140,6 +140,8 @@ router.post("/login", async (req, res) => {
       {
         _id: Vendordata._id,
         Vendor_id: Vendordata.Vendor_id,
+        shopname:Vendordata.shopname,
+
       },
       process.env.JWTSECREAT
     );
