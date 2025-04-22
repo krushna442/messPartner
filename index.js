@@ -29,6 +29,7 @@ import assigndeliveryRoute from './routes/vendors/assigndelivery.js';
 import paymentRoute from './routes/vendors/payment.js';
 import todaymenuRoute from './routes/clients/todayMenu.js';
 import wishlistROute from './routes/clients/wishlist.js';
+import settingRoute from './routes/clients/settings.js'
 
 // Notification Routes
 import userNotificationRoute from './routes/notifications/user.js';
@@ -106,6 +107,7 @@ app.use('/api', assigndeliveryRoute);
 app.use('/api', paymentRoute);
 app.use('/api', todaymenuRoute);
 app.use('/api', wishlistROute);
+app.use ('/api',settingRoute);
 
 // Socket.IO Events
 io.on('connection', (socket) => {
