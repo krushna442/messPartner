@@ -6,7 +6,7 @@ export default function (io) {
   const router = express.Router();
 
   // Send notification to a specific user
-  router.post('/send',isAuthenticated, (req, res) => {
+  router.post('/send',isAuthenticated, async(req, res) => {
     const {user_id ,name}= req.user;
     const { message, url,Vendor_id} = req.body;
 
