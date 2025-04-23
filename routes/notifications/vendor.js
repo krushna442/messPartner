@@ -15,7 +15,7 @@ export default (io) => {
 
     console.log(`Notification sent to ${room}:`, message);
 
-    return res.status(200).json({ status: 'success', message: `Notification sent to vendor ${Vendor_id}` });
+    return res.status(200).json({ status: 'success', message: `Notification sent to user ${user_id}` });
   });
 
   return router;
