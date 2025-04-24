@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 dotenv.config();
 const isauthenticated = (req, res, next) => {
-  const token = req.cookies.token;
+  const token = req.cookies.vendorToken;
   if (!token) {
     return res.status(401).json({ message: "login first" });
   }

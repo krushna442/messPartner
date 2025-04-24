@@ -33,7 +33,7 @@ router.use(express.urlencoded({ extended: true }));
 router.post("/home", isauthenticated, async (req, res) => {
   res.status(200).json({
     message: "This is the home page",
-    vendorDetails: await Vendor.findOne({ Vendor_id: req.Vendor.Vendor_id }), // Sending vendor details in response
+vendorDetails: await Vendor.findById(req.Vendor._id)
     // vendorDetails: req.Vendor // Sending vendor details in response
   });
 });
@@ -146,7 +146,7 @@ router.post("/login", async (req, res) => {
       process.env.JWTSECREAT
     );
 
-    res.cookie("token", token, {
+    res.cookie("vendorToken", token, {
       httpOnly: true,
       secure: true,
       sameSite: "None",

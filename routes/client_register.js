@@ -101,7 +101,7 @@ router.post("/login", async (req, res) => {
       number : userdata.number,
      },process.env.JWTSECREAT);
 
-     res.cookie("token", token, {
+     res.cookie("clientToken", token, {
       httpOnly: true,
       secure: true,
       sameSite: "None",

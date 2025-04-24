@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const isAuthenticated = (req, res, next) => {
-  const token = req.cookies.token;
+  const token = req.cookies.clientToken;
   if (!token) {
     return res.status(401).json({ message: "Unauthorized: No token provided" });
   }
