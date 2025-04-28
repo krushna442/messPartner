@@ -6,6 +6,14 @@ import Mealrecord from "../../models/mealrecord.js";
 import isauthenticated from "../../utils/authmiddlewware.js";
 import Client from "../../models/Client.js";
 import dotenv from "dotenv";
+import DeliveryList from "../../models/DeliveryList.js";
+import Vendor from "../../models/Vendor.js";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc.js";
+import timezone from "dayjs/plugin/timezone.js";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 dotenv.config();
 
 const router = express.Router();
@@ -51,61 +59,55 @@ router.post('/delivery/register', async (req, res) => {
 
 
 
-router.post('/delivery', isauthenticated, async (req, res) => {
-    try {
-        const { deliverygroup } = req.body;
 
-        // Validate Vendor ID
-        if (!req.Vendor || !req.Vendor.Vendor_id) {
-            return res.status(400).json({ message: "Vendor ID missing in request." });
-        }
+router.post("/today/delivery", async (req, res) => {
+  try {
+    const { Vendor_id, deliverygroup } = req.body;
 
-        const today = new Date().toISOString().split("T")[0];
-        const mealdata = await Mealrecord.findOne({ Vendor_id: req.Vendor.Vendor_id, date: today });
-
-        if (!mealdata) {
-            return res.status(404).json({ message: "No meal data found for today." });
-        }
-
-        // Get current time
-        const currentHour = new Date().getHours();
-        let userIds = [];
-
-        if (currentHour >= 4 && currentHour < 10) {
-            userIds = mealdata.breakfast;
-        } else if (currentHour >= 10 && currentHour < 18) {
-            userIds = mealdata.lunch;
-        } else {
-            userIds = mealdata.dinner;
-        }
-
-        if (!userIds.length) {
-            return res.status(200).json({ message: "No users found for this meal time." });
-        }
-
-        // Fetch subscribers who belong to the provided delivery group and match user IDs
-        const subscribers = await Subscriber.find({
-            user_id: { $in: userIds },
-            deliverygroup: deliverygroup,
-            Vendor_id: req.Vendor.Vendor_id
-        });
-
-        if (!subscribers.length) {
-            return res.status(404).json({ message: "No subscribers found for this delivery group." });
-        }
-
-        // Fetch user details from User collection
-        // const userDetails = await Client.find({
-        //     user_id: { $in: subscribers.map(sub => sub.user_id) }
-        // }).select("-password"); // Exclude password for security
-
-        res.status(200).json(subscribers);
-
-    } catch (error) {
-        console.error("Error fetching delivery list:", error);
-        res.status(500).json({ message: "Internal Server Error", error: error.message });
+    if (!Vendor_id) {
+      return res.status(400).json({ message: "Vendor_id is required." });
     }
+
+    const today = dayjs().tz("Asia/Kolkata").format("YYYY-MM-DD");
+    const currentHour = dayjs().tz("Asia/Kolkata").hour();
+
+    let mealType = "";
+    if (currentHour >= 4 && currentHour < 10) {
+      mealType = "breakfast";
+    } else if (currentHour >= 10 && currentHour < 18) {
+      mealType = "lunch";
+    } else {
+      mealType = "dinner";
+    }
+
+    // Fetch delivery list for this vendor, date, and mealType
+    const deliverylist = await DeliveryList.find({
+      Vendor_id,
+      date: today,
+      mealType,
+    });
+
+    // Fetch vendor info
+    const vendor = await Vendor.findOne({ Vendor_id });
+
+    if (!vendor) {
+      return res.status(404).json({ message: "Vendor not found." });
+    }
+
+    res.status(200).json({
+      message: "Delivery list fetched successfully.",
+      mealType,
+      vendorMealType: vendor.mealtype, // vendor's mealType field
+      deliverylist,
+    });
+  } catch (error) {
+    console.error("Error fetching today's delivery list:", error);
+    res.status(500).json({ message: "Internal Server Error", error: error.message });
+  }
 });
+
+
+
 
 
 export default router;

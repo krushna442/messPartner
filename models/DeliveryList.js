@@ -1,18 +1,33 @@
 import mongoose from "mongoose";
+import { type } from "os";
 
 const deliveryListSchema = new mongoose.Schema(
   {
     Vendor_id: { type: String, required: true },
-    date: { type: String, required: true }, // Store date as YYYY-MM-DD
+    shopname: {type:String},
+    date: { type: String, required: true },
     mealType: { type: String, required: true },
     deliveryGroups: [
       {
         groupName: { type: String },
-        users: [
+        veg: [
           {
             user_id: { type: String },
             user_name: { type: String },
             number: { type: Number },
+            address1:{type:String},
+            address2:{type:String},
+            _id: false // disable auto _id for each user object
+          }
+        ],
+        nonVeg: [
+          {
+            user_id: { type: String },
+            user_name: { type: String },
+            number: { type: Number },
+            address1:{type:String},
+            address2:{type:String},
+            _id: false // disable auto _id for each user object
           }
         ]
       }
