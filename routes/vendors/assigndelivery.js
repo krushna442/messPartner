@@ -65,7 +65,7 @@ router.get("/vendor/deliverylist", isauthenticated, async (req, res) => {
     const groupedData = {};
 
     subscribers.forEach((sub) => {
-      const mealCategory = vegUserIds.includes(sub.user_id) ? "veg" : "nonVeg";
+      const mealCategory = (vegUserIds.includes(sub.user_id) && sub.mealtype === "veg") ? "veg" : "nonVeg";
       if (!groupedData[sub.deliverygroup]) {
         groupedData[sub.deliverygroup] = { veg: [], nonVeg: [] };
       }
