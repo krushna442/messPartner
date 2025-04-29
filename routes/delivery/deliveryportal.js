@@ -63,7 +63,7 @@ router.post('/delivery/register', async (req, res) => {
 
 router.post("/today/delivery",isDeliveryAuthenticated, async (req, res) => {
   try {
-    const { Vendor_id, deliverygroup } = req.body;
+    const { Vendor_id } = req.deliveryboy;
 
     if (!Vendor_id) {
       return res.status(400).json({ message: "Vendor_id is required." });
