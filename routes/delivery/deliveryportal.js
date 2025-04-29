@@ -27,18 +27,7 @@ router.post('/delivery/login', async (req, res) => {
             return res.status(400).json({ message: "Invalid phone number or vendor ID" });
         }
 
-        const token = jwt.sign(
-            { _id: deliveryboy._id, Vendor_id: deliveryboy.Vendor_id },
-            process.env.JWTSECREAT
-        );
 
-        res.cookie("token", token, {
-            httpOnly: true,
-            secure: true,
-            sameSite: "None",
-            path: "/",
-            maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-        });
 
         res.json({ message: "Login successful",deliveryboy});
     } catch (error) {
