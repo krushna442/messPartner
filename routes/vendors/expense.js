@@ -2,7 +2,7 @@ import express from 'express';
 import isauthenticated from '../../utils/authmiddlewware.js';
 import Expense from '../../models/expensemodel.js';
 import Subscriber from '../../models/subscriber.js';
-
+import Payment from '../../models/paymentmodel.js';
 const router = express.Router();
 
 // ✅ **Add Expense Route**
@@ -24,68 +24,79 @@ router.post('/vendor/expense', isauthenticated, async (req, res) => {
     }
 });
 
-// ✅ **Calculate Profit Route**
+// ✅ **Calculate Profit Route
+
+
+
 router.get('/vendor/profit', isauthenticated, async (req, res) => {
-    try {
-        const Vendor_id = req.Vendor.Vendor_id;
+  try {
+    const Vendor_id = req.Vendor.Vendor_id;
 
-        // 🗓️ Get current month and year
-        const now = new Date();
-        const currentMonth = now.getMonth() + 1;
-        const currentYear = now.getFullYear();
+    // 🗓️ Get current month and year
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
 
-        const startOfMonth = new Date(`${currentYear}-${currentMonth}-01`);
-        const startOfNextMonth = new Date(`${currentYear}-${currentMonth + 1}-01`);
+    const startOfMonth = new Date(`${currentYear}-${currentMonth}-01`);
+    const startOfNextMonth = new Date(`${currentYear}-${currentMonth + 1}-01`);
 
-        // **📝 Step 1: Fetch Expenses**
-        const expenses = await Expense.find({
-            Vendor_id,
-            $expr: {
-                $and: [
-                    {
-                        $gte: [
-                            { $dateFromString: { dateString: "$expenseData.date" } },
-                            startOfMonth
-                        ]
-                    },
-                    {
-                        $lt: [
-                            { $dateFromString: { dateString: "$expenseData.date" } },
-                            startOfNextMonth
-                        ]
-                    }
-                ]
-            }
-        });
+    // 📊 Fetch Expenses for current month
+    const expenses = await Expense.find({
+      Vendor_id,
+      $expr: {
+        $and: [
+          {
+            $gte: [
+              { $dateFromString: { dateString: "$expenseData.date", onError: null } },
+              startOfMonth
+            ]
+          },
+          {
+            $lt: [
+              { $dateFromString: { dateString: "$expenseData.date", onError: null } },
+              startOfNextMonth
+            ]
+          }
+        ]
+      }
+    });
 
-        // **📊 Calculate Total Expense**
-        const totalExpense = expenses.reduce((sum, exp) => {
-            return sum + (exp.expenseData.amount ? Number(exp.expenseData.amount) : 0);
-        }, 0);
+    // 📉 Calculate total expenses
+    const totalExpense = expenses.reduce((sum, exp) => {
+      const amount = Number(exp.expenseData.amount) || 0;
+      return sum + amount;
+    }, 0);
 
-        // **📝 Step 2: Fetch Subscribers**
-        const subscribers = await Subscriber.find({
-            Vendor_id,
-            createdAt: { $gte: startOfMonth, $lt: startOfNextMonth }
-        }).select('subscriptionType');
+    // 💸 Fetch Payments for current month
+    const payments = await Payment.find({
+      Vendor_id,
+      createdAt: { $gte: startOfMonth, $lt: startOfNextMonth }
+    }).select('amount');
 
-        // **📊 Calculate Total Subscription Revenue**
-        const totalSubscriptionValue = subscribers.reduce((sum, sub) => sum + Number(sub.subscriptionType || 0), 0);
+    // 📈 Calculate total payments
+    const totalPayment = payments.reduce((sum, pay) => {
+      return sum + (Number(pay.amount) || 0);
+    }, 0);
 
-        // **📈 Step 3: Calculate Profit**
-        const profit = totalSubscriptionValue * 100 - totalExpense;
+    // 📊 Calculate profit
+    const profit = totalPayment - totalExpense;
 
-        // ✅ **Response**
-        res.status(200).json({
-            message: "Profit data fetched successfully",
-            totalExpense,
-            totalSubscriptionValue,
-            profit
-        });
+    // ✅ Send response
+    res.status(200).json({
+      message: "Profit data fetched successfully",
+      totalExpense,
+      totalPayment,
+      profit
+    });
 
-    } catch (error) {
-        res.status(500).json({ message: "Error fetching profit data", error: error.message });
-    }
+  } catch (error) {
+    console.error("Profit fetch error:", error);
+    res.status(500).json({ message: "Error fetching profit data", error: error.message });
+  }
 });
+
+
+
+
 
 export default router;
