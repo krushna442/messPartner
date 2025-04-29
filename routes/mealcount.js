@@ -223,7 +223,7 @@ cron.schedule("0 4  * * *", () => {
   fetchAndStoreMeals();
 });
 
-cron.schedule("38 10 * * *", () => {
+cron.schedule("55 12 * * *", () => {
   console.log("Running scheduled meal count fetch at 11:48 AM...");
   fetchAndStoreMeals();
 });

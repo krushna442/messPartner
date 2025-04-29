@@ -11,6 +11,7 @@ import Vendor from "../../models/Vendor.js";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc.js";
 import timezone from "dayjs/plugin/timezone.js";
+import isDeliveryAuthenticated from "../../utils/deliveryAuth.js";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -27,7 +28,18 @@ router.post('/delivery/login', async (req, res) => {
             return res.status(400).json({ message: "Invalid phone number or vendor ID" });
         }
 
+        const token = jwt.sign(
+            { _id: deliveryboy._id, Vendor_id: deliveryboy.Vendor_id },
+            process.env.JWTSECREAT
+        );
 
+        res.cookie("deliveryToken", token, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "None",
+            path: "/",
+            maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        });
 
         res.json({ message: "Login successful",deliveryboy});
     } catch (error) {
@@ -49,7 +61,7 @@ router.post('/delivery/register', async (req, res) => {
 
 
 
-router.post("/today/delivery", async (req, res) => {
+router.post("/today/delivery",isDeliveryAuthenticated, async (req, res) => {
   try {
     const { Vendor_id, deliverygroup } = req.body;
 
