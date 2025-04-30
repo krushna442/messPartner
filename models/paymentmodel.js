@@ -9,7 +9,7 @@ const paymentSchema = mongoose.Schema({
     subscriptionType:String,
     amount:Number,
     name: String,
-    phone: String
+    phone: String,
 }, { timestamps: true });
 const Payment = mongoose.model("Payment" ,paymentSchema);
 export default Payment;

@@ -22,8 +22,12 @@ const subscriberSchema = mongoose.Schema(
     receivedDinner: { type: Number, default: 0 },
     mealOption: { type: Boolean, default: true },
     mealskipped:{type:Number,default:0},
-    deliverygroup :{type:String}
-  },
+    deliverygroup :{type:String},
+    paymentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Payment",
+    },
+    },
   { timestamps: true }
 );
 
