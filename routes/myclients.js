@@ -10,8 +10,11 @@ import isauthenticated from '../utils/authmiddlewware.js';
  router.get('/myclients',isauthenticated,async(req,res)=>{
     
     res.status(200).json({
-        subscriptiondetails :await Subscriber.find({Vendor_id:req.Vendor.Vendor_id})
 
+      subscriptiondetails :await Subscriber.find({
+            Vendor_id: req.Vendor.Vendor_id,
+            subscriptionEndDate: { $gte: Date.now() }
+          })
         })
  })
  router.get('/myclients/mealtype',isauthenticated,async(req,res)=>{
