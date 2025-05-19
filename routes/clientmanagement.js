@@ -3,16 +3,29 @@ import Subscriber from "../models/subscriber.js";
 import isauthenticated from "../utils/authmiddlewware.js";
 const router = express.Router();
 
-router.get("/vendor/clients/active",isauthenticated, async (req, res) => {
+router.get("/vendor/clients/active", isauthenticated, async (req, res) => {
   try {
-    const Vendor_id= req.Vendor.Vendor_id;
-    const activeClients = await Subscriber.find({ mealskipped: 0 ,Vendor_id:Vendor_id});
-    res.json({ success: true, data: activeClients });
+    const Vendor_id = req.Vendor.Vendor_id;
+
+    const activeClients = await Subscriber.find({ mealskipped: 0, Vendor_id: Vendor_id });
+
+    const uniqueClients = [];
+    const userIds = new Set();
+
+    activeClients.forEach(client => {
+      if (!userIds.has(client.user_id)) {
+        uniqueClients.push(client);
+        userIds.add(client.user_id);
+      }
+    });
+
+    res.json({ success: true, data: uniqueClients });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: error });
+    res.status(500).json({ success: false, message: error.message });
   }
 });
+
 
 router.get("/vendor/clients/paused",isauthenticated, async (req, res) => {
   try {
