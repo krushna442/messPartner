@@ -52,31 +52,28 @@ router.post("/subscribtion", isAuthenticated, async (req, res) => {
   }
 });
 
-router.post("/mealOff",isAuthenticated, async (req, res) => {
+router.post("/mealOff", isAuthenticated, async (req, res) => {
   try {
-        const {user_id}= req.user;
-    // Find the user first
-    const subscriber = await Subscriber.findOne({ user_id });
+    const { _id } = req.body;
+    const subscriber = await Subscriber.findById(_id);
 
     if (!subscriber) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(404).json({ error: "subscription not found" });
     }
 
-    // Toggle mealOption (true ↔ false)
     const updatedClient = await Subscriber.findOneAndUpdate(
-      { user_id },
-      { $set: { mealOption: !subscriber.mealOption } }, // ✅ Toggles true ↔ false
-      { new: true } // ✅ Returns the updated document
+      { _id },
+      { $set: { mealOption: !subscriber.mealOption } },
+      { new: true }
     );
 
     res.json({ message: "Meal option toggled", user: updatedClient });
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({ error: "Error updating meal option", details: error.message });
+    res.status(500).json({ error: "Error updating meal option", details: error.message });
   }
 });
+
 router.delete("/deletesubscription/:id", isAuthenticated, async (req, res) => {
   try {
     const { id } = req.params;

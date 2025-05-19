@@ -7,6 +7,17 @@ const subscriptionTypeSchema = new mongoose.Schema({
   days: [{ type: Number }]
 }, { _id: false }); // Prevent automatic _id creation for subdocuments
 
+
+
+const notificationSchema = new mongoose.Schema({
+  message: { type: String, required: true },
+  user_id: { type: String, required: true },
+  name: { type: String, required: true },
+  url: { type: String },
+  date: { type: Date, default: Date.now },
+  read: { type: Boolean, default: false }
+}, { _id: false });
+
 const vendorSchema = new mongoose.Schema({
   Vendor_id: { type: String, required: true, unique: true },
   name: { type: String },
@@ -26,7 +37,9 @@ const vendorSchema = new mongoose.Schema({
   contactmobile: { type: Number },
   whatsapp: { type: Number },
   mealToDeliver: { type: Number },
-  scanner: { type: String }
+  scanner: { type: String },
+  notifications: [notificationSchema]
+
 }, { timestamps: true });
 
 const Vendor = mongoose.model("Vendor", vendorSchema);
