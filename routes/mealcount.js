@@ -79,7 +79,7 @@ const fetchAndStoreMeals = async () => {
       console.log("Running scheduled meal count fetch...");
 
       // 1️⃣ Fetch Subscribers Who Skipped Meals (mealOption: false)
-      const mealOffSubscribers = await Subscriber.find({ mealOption: false });
+      const mealOffSubscribers = await Subscriber.find({ mealOption: false ,  subscriptionEndDate: { $gte: Date.now() } });
 
       for (const subscriber of mealOffSubscribers) {
           subscriber.mealskipped += 1;
@@ -90,7 +90,7 @@ const fetchAndStoreMeals = async () => {
       }
 
       // 2️⃣ Fetch Active Subscribers (mealOption: true)
-      const subscribers = await Subscriber.find({ mealOption: true });
+      const subscribers = await Subscriber.find({ mealOption: true , subscriptionEndDate: { $gte: Date.now() }});
 
       if (!subscribers.length) {
           console.log("No active subscribers found.");

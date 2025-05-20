@@ -7,7 +7,7 @@ import Menu from '../../models/menumodel.js';
 router.get('/user/menu', isAuthenticated, async (req, res) => {
   try {
     const { user_id } = req.user;
-    const subscriptions = await Subscriber.find({ user_id });
+    const subscriptions = await Subscriber.find({ user_id , subscriptionEndDate: { $gte: Date.now() }});
 
     const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
     const currentDay = dayNames[new Date().getDay()];
@@ -49,7 +49,7 @@ router.get('/user/fullmenu', isAuthenticated, async (req, res) => {
     const { user_id } = req.user;
     console.log("Authenticated User ID:", user_id);
 
-    const subscriptions = await Subscriber.find({ user_id });
+    const subscriptions = await Subscriber.find({ user_id , subscriptionEndDate: { $gte: Date.now() }});
     console.log("Subscriptions found:", subscriptions);
 
     const fullMenus = [];

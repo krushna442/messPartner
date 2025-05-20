@@ -43,22 +43,13 @@ router.get('/vendor/profit', isauthenticated, async (req, res) => {
     // 📊 Fetch Expenses for current month
     const expenses = await Expense.find({
       Vendor_id,
-      $expr: {
-        $and: [
-          {
-            $gte: [
-              { $dateFromString: { dateString: "$expenseData.date", onError: null } },
-              startOfMonth
-            ]
-          },
-          {
-            $lt: [
-              { $dateFromString: { dateString: "$expenseData.date", onError: null } },
-              startOfNextMonth
-            ]
-          }
-        ]
-      }
+$expr: {
+  $and: [
+    { $gte: [ "$expenseData.date", startOfMonth ] },
+    { $lt:  [ "$expenseData.date", startOfNextMonth ] }
+  ]
+}
+
     });
 
     // 📉 Calculate total expenses

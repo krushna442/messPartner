@@ -54,6 +54,7 @@ router.get("/vendor/deliverylist", isauthenticated, async (req, res) => {
     const subscribers = await Subscriber.find({
       user_id: { $in: [...vegUserIds, ...nonVegUserIds] },
       Vendor_id,
+       subscriptionEndDate: { $gte: Date.now() }
     });
 
     if (!subscribers.length) {
