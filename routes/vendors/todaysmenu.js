@@ -12,11 +12,29 @@ router.get('/vendor/todaymenu', isauthenticated, async (req, res) => {
     const dayMap = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
     const todayKey = dayMap[new Date().getDay()];
 
-    const todaysmenu = menus.map((menu) => ({
-      packageType: menu.packageType,
-      mealType: menu.mealType,
-      menu: menu.menu[todayKey]  // this is now correct
-    }));
+    // Use a map to group menus by packageType
+    const menuMap = new Map();
+
+    menus.forEach((menu) => {
+      const pkg = menu.packageType;
+      if (!menuMap.has(pkg)) {
+        menuMap.set(pkg, {
+          packageType: pkg,
+          veg: {},
+          nonveg: {}
+        });
+      }
+
+      const todayMenu = menu.menu[todayKey] || {};
+
+      if (menu.mealType === 'veg') {
+        menuMap.get(pkg).veg = todayMenu;
+      } else if (menu.mealType === 'nonveg') {
+        menuMap.get(pkg).nonveg = todayMenu;
+      }
+    });
+
+    const todaysmenu = Array.from(menuMap.values());
 
     res.status(200).json(todaysmenu);
   } catch (error) {
