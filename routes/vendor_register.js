@@ -39,7 +39,20 @@ vendorDetails: await Vendor.findById(req.Vendor._id)
 });
 
 // Register Vendor
-router.post("/register", upload.single("image"), async (req, res) => {
+
+
+
+router.post("/register", upload.fields([
+  { name: "image" },
+  { name: "aadharFront" },
+  { name: "aadharBack" },
+  { name: "passportOrDL" },
+  { name: "fssaiLicense" },
+  { name: "gstinCertificate" },
+  { name: "kitchenPhoto" },
+  { name: "diningArea" },
+  { name: "exteriorView" }
+]), async (req, res) => {
   try {
     const {
       name,
@@ -51,36 +64,29 @@ router.post("/register", upload.single("image"), async (req, res) => {
       mealtype,
       contactmobile,
       whatsapp,
+      businessName,
+      businessEmail,
+      businessContact,
+      ownerMobile,
+      addressLine,
+      city,
+      pincode
     } = req.body;
-    // const imagepath = req.file?req.file.path:null;
-    if (!req.file) {
-      return res.status(400).json({ message: "No file uploaded" });
-    }
-    const imageBase64 = req.file ? req.file.buffer.toString("base64") : null;
 
-    // Fetch the last vendor in descending order by `Vendor_id`
+    // Vendor_id Auto Generate
+    const lastVendor = await Vendor.findOne({}, { Vendor_id: 1 }).sort({ _id: -1 });
+    let newVendorId = lastVendor && lastVendor.Vendor_id
+      ? `MP-v-${parseInt(lastVendor.Vendor_id.split("-").pop(), 10) + 1}`
+      : "MP-v-1";
 
-    const lastVendor = await Vendor.findOne({}, { Vendor_id: 1 }).sort({
-      _id: -1,
-    });
-
-    let newVendorId;
-    if (lastVendor && lastVendor.Vendor_id) {
-      const lastNum = parseInt(lastVendor.Vendor_id.split("-").pop(), 10);
-      newVendorId = `MP-v-${lastNum + 1}`;
-    } else {
-      newVendorId = "MP-v-1";
-    }
-
-    // Check if the vendor already exists with email or number
-    const existingVendor = await Vendor.findOne({
-      $or: [{ email }, { number }],
-    });
+    // Check for Existing Vendor
+    const existingVendor = await Vendor.findOne({ $or: [{ email }, { number }] });
     if (existingVendor) {
-      return res
-        .status(400)
-        .json({ message: "Vendor already exists with this email or number" });
+      return res.status(400).json({ message: "Vendor already exists with this email or number" });
     }
+
+    // Convert images to base64
+    const toBase64 = (file) => file ? file[0].buffer.toString("base64") : null;
 
     const newvendor = new Vendor({
       Vendor_id: newVendorId,
@@ -88,39 +94,42 @@ router.post("/register", upload.single("image"), async (req, res) => {
       email,
       number,
       password,
-      image: imageBase64,
+      image: toBase64(req.files["image"]),
       shoplocation,
       subscriptiontype,
       mealtype,
       contactmobile,
       whatsapp,
+
+      businessName,
+      businessEmail,
+      businessContact,
+      ownerMobile,
+      addressLine,
+      city,
+      pincode,
+
+      aadharFront: toBase64(req.files["aadharFront"]),
+      aadharBack: toBase64(req.files["aadharBack"]),
+      passportOrDL: toBase64(req.files["passportOrDL"]),
+      fssaiLicense: toBase64(req.files["fssaiLicense"]),
+      gstinCertificate: toBase64(req.files["gstinCertificate"]),
+      kitchenPhoto: toBase64(req.files["kitchenPhoto"]),
+      diningArea: toBase64(req.files["diningArea"]),
+      exteriorView: toBase64(req.files["exteriorView"])
     });
 
     await newvendor.save();
 
-    const Vendordata = await Vendor.findOne({ number: number });
-    const token = jwt.sign(
-      {
-        _id: Vendordata._id,
-        Vendor_id: Vendordata.Vendor_id,
-      },
-      process.env.JWTSECREAT
-    );
-
-res.cookie("token", token, {
-  httpOnly: true,
-  secure: true,
-  sameSite: "None",
-  path: "/",
-  maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-});
-
     res.status(201).json({ message: "Vendor created", Vendor_id: newVendorId });
+
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
+
 
 // login section starts here
 router.post("/login", async (req, res) => {

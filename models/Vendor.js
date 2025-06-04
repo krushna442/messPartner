@@ -1,3 +1,4 @@
+import { unique } from '@tensorflow/tfjs-core';
 import mongoose from 'mongoose';
 
 const subscriptionTypeSchema = new mongoose.Schema({
@@ -5,9 +6,7 @@ const subscriptionTypeSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   meals: [{ type: String, required: true }],
   days: [{ type: Number }]
-}, { _id: false }); // Prevent automatic _id creation for subdocuments
-
-
+}, { _id: false });
 
 const notificationSchema = new mongoose.Schema({
   message: { type: String, required: true },
@@ -26,10 +25,9 @@ const vendorSchema = new mongoose.Schema({
   password: { type: String },
   image: { type: String },
 
-  subscriptiontype: [subscriptionTypeSchema], // Array of subscription objects
-
-  mealtype: { type: [String], default: ["breakfast", "lunch", "dinner"] }, // Array of Strings
-  subscriptionDuration: { type: [Number], default: [1, 7, 30, 60, 90] }, // <-- FIXED here
+  subscriptiontype: [subscriptionTypeSchema],
+  mealtype: { type: [String], default: ["breakfast", "lunch", "dinner"] },
+  subscriptionDuration: { type: [Number], default: [30, 60, 90] },
 
   location: { type: [String] },
   shopname: { type: String },
@@ -38,7 +36,25 @@ const vendorSchema = new mongoose.Schema({
   whatsapp: { type: Number },
   mealToDeliver: { type: Number },
   scanner: { type: String },
-  notifications: [notificationSchema]
+  notifications: [notificationSchema],
+
+  // 👇 Newly added fields
+  aadharFront: { type: String },
+  aadharBack: { type: String },
+  passportOrDL: { type: String },
+  fssaiLicense: { type: String },
+  gstinCertificate: { type: String },
+  kitchenPhoto: { type: String },
+  diningArea: { type: String },
+  exteriorView: { type: String },
+
+  businessName: { type: String },
+  businessEmail: { type: String,unique:true },
+  businessContact: { type: String },
+  addressLine: { type: String },
+  city: { type: String },
+  pincode: { type: String },
+  ownerMobile: { type: String ,unique:true}
 
 }, { timestamps: true });
 
