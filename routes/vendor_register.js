@@ -55,22 +55,14 @@ router.post("/register", upload.fields([
 ]), async (req, res) => {
   try {
     const {
-      name,
-      email,
-      number,
-      password,
-      shoplocation,
-      subscriptiontype,
-      mealtype,
-      contactmobile,
-      whatsapp,
       businessName,
       businessEmail,
       businessContact,
       ownerMobile,
       addressLine,
       city,
-      pincode
+      pincode,
+      password
     } = req.body;
 
     // Vendor_id Auto Generate
@@ -80,7 +72,7 @@ router.post("/register", upload.fields([
       : "MP-v-1";
 
     // Check for Existing Vendor
-    const existingVendor = await Vendor.findOne({ $or: [{ email }, { number }] });
+    const existingVendor = await Vendor.findOne({ $or: [{ businessEmail }, { ownerMobile }] });
     if (existingVendor) {
       return res.status(400).json({ message: "Vendor already exists with this email or number" });
     }
@@ -90,16 +82,10 @@ router.post("/register", upload.fields([
 
     const newvendor = new Vendor({
       Vendor_id: newVendorId,
-      name,
-      email,
-      number,
+  
       password,
       image: toBase64(req.files["image"]),
-      shoplocation,
-      subscriptiontype,
-      mealtype,
-      contactmobile,
-      whatsapp,
+
 
       businessName,
       businessEmail,
@@ -134,47 +120,62 @@ router.post("/register", upload.fields([
 // login section starts here
 router.post("/login", async (req, res) => {
   try {
-    const { number, password } = req.body;
-    const Vendordata = await Vendor.findOne({ number: number });
-    if (!Vendordata) {
-      return res.status(401).json({ message: "Unauthorized: Invalid number" });
-    }
-    if (Vendordata.password !== password) {
-      return res
-        .status(401)
-        .json({ message: "Unauthorized: Invalid password" });
+    const { ownerMobile, password, businessEmail } = req.body;
+
+    // Ensure at least one identifier is provided
+    if (!ownerMobile && !businessEmail) {
+      return res.status(400).json({ message: "Please provide either mobile number or email" });
     }
 
+    // Find vendor by either mobile or email
+    const Vendordata = await Vendor.findOne({
+      $or: [
+        { ownerMobile: ownerMobile },
+        { businessEmail: businessEmail }
+      ]
+    });
+
+    if (!Vendordata) {
+      return res.status(401).json({ message: "Unauthorized: Vendor not found" });
+    }
+
+    if (Vendordata.password !== password) {
+      return res.status(401).json({ message: "Unauthorized: Invalid password" });
+    }
+
+    // Generate JWT token
     const token = jwt.sign(
       {
         _id: Vendordata._id,
         Vendor_id: Vendordata.Vendor_id,
-        shopname:Vendordata.shopname,
-
+        businessName: Vendordata.businessName,
       },
       process.env.JWTSECREAT
     );
 
+    // Set cookie with JWT
     res.cookie("vendorToken", token, {
       httpOnly: true,
       secure: true,
       sameSite: "None",
       path: "/",
-      maxAge: 30*24 * 60 * 60 * 1000,
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     });
 
     res.status(200).json({
       message: "Successfully logged in",
       vendor: {
         id: Vendordata.Vendor_id,
-        name: Vendordata.name,
+        businessName: Vendordata.businessName,
       },
     });
+
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
 
 // logout section
 router.get("/logout", (req, res) => {
