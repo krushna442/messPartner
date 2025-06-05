@@ -16,18 +16,8 @@ router.get('/myclients', isauthenticated, async (req, res) => {
       subscriptionEndDate: { $gte: Date.now() }
     });
 
-    const uniqueClients = [];
-    const userIds = new Set();
-
-    subscriptionDetails.forEach(client => {
-      if (!userIds.has(client.user_id)) {
-        uniqueClients.push(client);
-        userIds.add(client.user_id);
-      }
-    });
-
     res.status(200).json({
-      subscriptiondetails: uniqueClients
+      subscriptiondetails: subscriptionDetails
     });
 
   } catch (error) {

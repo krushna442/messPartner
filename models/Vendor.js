@@ -19,9 +19,13 @@ const notificationSchema = new mongoose.Schema({
 
 const vendorSchema = new mongoose.Schema({
   Vendor_id: { type: String, required: true, unique: true },
-  name: { type: String },
-  email: { type: String, unique: true },
-  number: { type: Number, unique: true },
+  businessName: { type: String },
+  businessEmail: { type: String},
+  businessContact: { type: String },
+  addressLine: { type: String },
+  city: { type: String },
+  pincode: { type: String },
+  ownerMobile: { type: String },
   password: { type: String },
   image: { type: String },
 
@@ -48,13 +52,7 @@ const vendorSchema = new mongoose.Schema({
   diningArea: { type: String },
   exteriorView: { type: String },
 
-  businessName: { type: String },
-  businessEmail: { type: String,unique:true },
-  businessContact: { type: String },
-  addressLine: { type: String },
-  city: { type: String },
-  pincode: { type: String },
-  ownerMobile: { type: String ,unique:true}
+
 
 }, { timestamps: true });
 
