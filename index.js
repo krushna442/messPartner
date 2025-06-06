@@ -31,6 +31,7 @@ import todaymenuRoute from './routes/clients/todayMenu.js';
 import wishlistROute from './routes/clients/wishlist.js';
 import settingRoute from './routes/clients/settings.js';
 import vendormenuroute from './routes/vendors/todaysmenu.js';
+import pendingsubscriberRoute from './routes/vendors/pendingSubscription.js'
 
 // Notification Routes
 import userNotificationRoute from './routes/notifications/user.js';
@@ -110,7 +111,7 @@ app.use('/api', todaymenuRoute);
 app.use('/api', wishlistROute);
 app.use ('/api',settingRoute);
 app.use('/api', vendormenuroute);
-
+app.use('/api',pendingsubscriberRoute);
 // Socket.IO Events
 io.on('connection', (socket) => {
   console.log('Client connected');

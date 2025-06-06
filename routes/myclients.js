@@ -25,6 +25,23 @@ router.get('/myclients', isauthenticated, async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
+router.get('/allclients', isauthenticated, async (req, res) => {
+  try {
+    const Vendor_id = req.Vendor.Vendor_id;
+
+    const subscriptionDetails = await Subscriber.find({
+      Vendor_id: Vendor_id,
+    });
+
+    res.status(200).json({
+      subscriptiondetails: subscriptionDetails
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
 
  router.get('/myclients/mealtype',isauthenticated,async(req,res)=>{
     const veg= await Subscriber.find({Vendor_id:req.Vendor.Vendor_id,mealtype:"veg",  subscriptionEndDate: { $gte: Date.now() }});

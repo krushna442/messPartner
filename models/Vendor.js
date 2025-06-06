@@ -12,7 +12,7 @@ const notificationSchema = new mongoose.Schema({
   message: { type: String, required: true },
   user_id: { type: String, required: true },
   name: { type: String, required: true },
-  url: { type: String },
+  url:{ type: String },
   date: { type: Date, default: Date.now },
   read: { type: Boolean, default: false }
 }, { _id: false });

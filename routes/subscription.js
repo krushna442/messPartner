@@ -9,7 +9,7 @@ const router = express.Router();
 dotenv.config();
 
 router.post("/subscribtion", isAuthenticated, async (req, res) => {
-  const { user_id, Vendor_id, subscriptionType, mealtype, address1, address2 ,VendorData ,packageType, paymentId} =req.body;
+  const { user_id, Vendor_id, subscriptionType, mealtype, address1, address2 ,VendorData ,packageType, paymentId,paymentDetails } =req.body;
   if(!paymentId){
     res.status(300).json("paymentId is required")
   }
@@ -30,11 +30,13 @@ router.post("/subscribtion", isAuthenticated, async (req, res) => {
       address2: address2,
       subscriptionId: user_id + Vendor_id,
       subscriptionType: subscriptionType,
-      mealType: mealtype,
       subscriptionDate: new Date(subscriptionDate),
       subscriptionEndDate: subscriptionEndDate,
       totalMeal: totalMeal,
-      paymentId:paymentId
+      amount:amount,
+      paymentId:paymentId,
+      paymentDetails: paymentDetails // ✅ Add this line
+
     });
 
     await subscriber.save();

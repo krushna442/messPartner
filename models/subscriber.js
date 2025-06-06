@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import { type } from "os";
 
 const subscriberSchema = mongoose.Schema(
   {
@@ -10,7 +9,7 @@ const subscriberSchema = mongoose.Schema(
     number:{type:Number},
     subscriptionId: { type: String },
     subscriptionType: {type:Number},
-    packageType:{type:String},
+    packageType:{type: Object},
     mealtype: { type: String },
     address1:{type:String},
     address2:{type:String},
@@ -23,10 +22,14 @@ const subscriberSchema = mongoose.Schema(
     mealOption: { type: Boolean, default: true },
     mealskipped:{type:Number,default:0},
     deliverygroup :{type:String},
+    amount:{type:Number},
+    pending:{type:Boolean,default:true},
     paymentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Payment",
     },
+    paymentDetails: { type: Object },
+    
     },
   { timestamps: true }
 );
