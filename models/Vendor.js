@@ -7,7 +7,7 @@ const subscriptionTypeSchema = new mongoose.Schema({
   meals: [{ type: String, required: true }],
   days: { type: Number },
   types:[{ type: String, required: true }] ,// for veg ,noveg
-  status:{type:String,default:Active}
+  status:{type:String,default:"Active"}
 }, { _id: false });
 
 const notificationSchema = new mongoose.Schema({
