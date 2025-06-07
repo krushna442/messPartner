@@ -71,7 +71,7 @@ router.post("/updateprofile/contact", isauthenticated, async (req, res) => {
       .json({ message: "Internal Server Error", error: error.message });
   }
 });
-router.post("/updateprofile/subscriptiontype", isauthenticated, async (req, res) => { 
+router.post("/updateprofile/subscriptiontype", isauthenticated, async (req, res) => {
   try {
     const vendor = await Vendor.findOne({ Vendor_id: req.Vendor.Vendor_id });
 
@@ -79,15 +79,31 @@ router.post("/updateprofile/subscriptiontype", isauthenticated, async (req, res)
       return res.status(404).json({ message: "Vendor not found" });
     }
 
-    const { packageName, price, meals, days ,types } = req.body;
+    const { packageName, price, meals, days, types } = req.body;
 
-    if (!packageName || !meals || price === undefined || days === undefined ) {
+    if (!packageName || !meals || price === undefined || days === undefined) {
       return res.status(400).json({ message: "Package name, price, and meals are required" });
     }
 
+    function arraysEqual(a, b) {
+      if (a.length !== b.length) return false;
+      return a.every((val, index) => val === b[index]);
+    }
 
-      vendor.subscriptiontype.push({ packageName, price, meals, days,types }); // ✅ Add new entry with days
-    
+    const existingIndex = vendor.subscriptiontype.findIndex(
+      (pkg) =>
+        pkg.packageName === packageName &&
+        arraysEqual(pkg.types, types)
+    );
+
+    if (existingIndex !== -1) {
+      vendor.subscriptiontype[existingIndex].price = price;
+      vendor.subscriptiontype[existingIndex].meals = meals;
+      vendor.subscriptiontype[existingIndex].days = days;
+      vendor.subscriptiontype[existingIndex].types = types;
+    } else {
+      vendor.subscriptiontype.push({ packageName, price, meals, days, types });
+    }
 
     await vendor.save();
 
