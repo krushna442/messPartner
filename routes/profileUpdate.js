@@ -85,18 +85,9 @@ router.post("/updateprofile/subscriptiontype", isauthenticated, async (req, res)
       return res.status(400).json({ message: "Package name, price, and meals are required" });
     }
 
-    const existingIndex = vendor.subscriptiontype.findIndex(
-      (pkg) => pkg.packageName === packageName
-    );
 
-    if (existingIndex !== -1) {
-      vendor.subscriptiontype[existingIndex].price = price;
-      vendor.subscriptiontype[existingIndex].meals = meals;
-      vendor.subscriptiontype[existingIndex].days = days; // ✅ Update days too
-      vendor.subscriptiontype[existingIndex].types = types; // ✅ Update types too
-    } else {
       vendor.subscriptiontype.push({ packageName, price, meals, days,types }); // ✅ Add new entry with days
-    }
+    
 
     await vendor.save();
 
