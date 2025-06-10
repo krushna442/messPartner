@@ -7,31 +7,32 @@ import { Readable } from 'stream';
 dotenv.config();
 
 const router = express.Router();
-
-// Parse credentials from environment variable
 const driveAPI = JSON.parse(process.env.GOOGLE_DRIVE_CREDENTIALS);
+driveAPI.private_key = driveAPI.private_key.replace(/\\n/g, '\n');
 
-// Multer config — memory storage
 const upload = multer({ storage: multer.memoryStorage() });
 
-// Google Drive Auth Setup
 const auth = new google.auth.GoogleAuth({
   credentials: driveAPI,
   scopes: ['https://www.googleapis.com/auth/drive'],
 });
 
-// Upload image to Google Drive
 router.post('/upload', upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded!' });
     }
 
-    const drive = google.drive({ version: 'v3', auth });
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(req.file.mimetype)) {
+      return res.status(400).json({ error: 'Unsupported file type!' });
+    }
 
-    const bufferStream = new Readable();
-    bufferStream.push(req.file.buffer);
-    bufferStream.push(null);
+    if (!driveAPI.folderId) {
+      return res.status(500).json({ error: 'Google Drive folder ID not configured.' });
+    }
+
+    const drive = google.drive({ version: 'v3', auth });
+    const bufferStream = Readable.from(req.file.buffer);
 
     const response = await drive.files.create({
       requestBody: {
@@ -54,34 +55,26 @@ router.post('/upload', upload.single('image'), async (req, res) => {
     });
 
     const imageUrl = `https://drive.google.com/uc?export=view&id=${response.data.id}`;
-
-    res.json({
-      success: true,
-      driveId: response.data.id,
-      imageUrl,
-    });
+    res.json({ success: true, driveId: response.data.id, imageUrl });
   } catch (error) {
     console.error('Google Drive Upload Error:', error);
-    res.status(500).json({
-      error: 'Failed to upload image',
-      details: error.message,
-    });
+    res.status(500).json({ error: 'Failed to upload image', details: error.message });
   }
 });
 
-// Fetch image directly by ID
 router.get('/image/:id', async (req, res) => {
   try {
     const drive = google.drive({ version: 'v3', auth });
     const fileId = req.params.id;
+
+    const metadata = await drive.files.get({ fileId, fields: 'mimeType' });
 
     const file = await drive.files.get(
       { fileId, alt: 'media' },
       { responseType: 'stream' }
     );
 
-    // Optionally detect mime type by Drive file metadata if needed
-    res.setHeader('Content-Type', 'image/jpeg');
+    res.setHeader('Content-Type', metadata.data.mimeType);
     file.data.pipe(res);
   } catch (error) {
     console.error('Fetch Image Error:', error);
