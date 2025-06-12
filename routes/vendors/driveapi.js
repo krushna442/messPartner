@@ -19,18 +19,34 @@ const auth = new google.auth.GoogleAuth({
 
 router.post('/upload', upload.single('image'), async (req, res) => {
   try {
+    console.log('Upload request received');
+    console.log('Request headers:', req.headers);
+    console.log('File details:', req.file);
+    console.log('Body:', req.body);
+
     if (!req.file) {
+      console.log('No file in request');
       return res.status(400).json({ error: 'No file uploaded!' });
     }
 
+    console.log('File info:', {
+      fieldname: req.file.fieldname,
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size
+    });
+
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(req.file.mimetype)) {
+      console.log('Unsupported file type:', req.file.mimetype);
       return res.status(400).json({ error: 'Unsupported file type!' });
     }
 
     if (!driveAPI.folderId) {
+      console.log('No folder ID configured');
       return res.status(500).json({ error: 'Google Drive folder ID not configured.' });
     }
 
+    console.log('Starting Google Drive upload...');
     const drive = google.drive({ version: 'v3', auth });
     const bufferStream = Readable.from(req.file.buffer);
 
@@ -46,6 +62,8 @@ router.post('/upload', upload.single('image'), async (req, res) => {
       fields: 'id,name,webViewLink',
     });
 
+    console.log('Drive upload response:', response.data);
+
     await drive.permissions.create({
       fileId: response.data.id,
       requestBody: {
@@ -55,9 +73,12 @@ router.post('/upload', upload.single('image'), async (req, res) => {
     });
 
     const imageUrl = `https://drive.google.com/uc?export=view&id=${response.data.id}`;
+    console.log('Upload successful, returning URL:', imageUrl);
+    
     res.json({ success: true, driveId: response.data.id, imageUrl });
   } catch (error) {
     console.error('Google Drive Upload Error:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({ error: 'Failed to upload image', details: error.message });
   }
 });

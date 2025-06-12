@@ -79,43 +79,43 @@ router.post("/updateprofile/subscriptiontype", isauthenticated, async (req, res)
       return res.status(404).json({ message: "Vendor not found" });
     }
 
-    const { packageName, price, meals, days, types } = req.body;
+    const subscriptionData = req.body;
 
-    if (!packageName || !meals || price === undefined || days === undefined) {
-      return res.status(400).json({ message: "Package name, price, and meals are required" });
+    // Validate required fields
+    const requiredFields = ["planName", "planDescription", "planDuration", "planCategory", "basePrice"];
+    const missingFields = requiredFields.filter(field => !subscriptionData[field]);
+
+    if (missingFields.length) {
+      return res.status(400).json({ message: `Missing required fields: ${missingFields.join(", ")}` });
     }
 
-    function arraysEqual(a, b) {
-      if (a.length !== b.length) return false;
-      return a.every((val, index) => val === b[index]);
-    }
+    // If _id is present, update existing subscriptionType
+    if (subscriptionData._id) {
+      const existingPackage = vendor.subscriptiontype.id(subscriptionData._id);
+      if (!existingPackage) {
+        return res.status(404).json({ message: "Subscription package not found" });
+      }
 
-    const existingIndex = vendor.subscriptiontype.findIndex(
-      (pkg) =>
-        pkg.packageName === packageName &&
-        arraysEqual(pkg.types, types)
-    );
-
-    if (existingIndex !== -1) {
-      vendor.subscriptiontype[existingIndex].price = price;
-      vendor.subscriptiontype[existingIndex].meals = meals;
-      vendor.subscriptiontype[existingIndex].days = days;
-      vendor.subscriptiontype[existingIndex].types = types;
+      // Update fields
+      Object.assign(existingPackage, subscriptionData);
     } else {
-      vendor.subscriptiontype.push({ packageName, price, meals, days, types });
+      // Else add a new package
+      vendor.subscriptiontype.push(subscriptionData);
     }
 
     await vendor.save();
 
     return res.status(200).json({
-      message: `Subscription package '${packageName}' added/updated successfully`,
+      message: `Subscription package ${subscriptionData._id ? "updated" : "added"} successfully`,
       subscriptiontype: vendor.subscriptiontype,
     });
 
   } catch (error) {
+    console.error("Subscription update error:", error);
     return res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 });
+
 
 
 
@@ -129,34 +129,32 @@ router.delete("/updateprofile/subscriptiontype", isauthenticated, async (req, re
       return res.status(404).json({ message: "Vendor not found" });
     }
 
-    const { packageName } = req.body;
+    const { subscriptionTypeId } = req.body;
 
-    if (!packageName) {
-      return res.status(400).json({ message: "Package name is required" });
+    if (!subscriptionTypeId) {
+      return res.status(400).json({ message: "subscriptionTypeId is required" });
     }
 
-    const initialLength = vendor.subscriptiontype.length;
-
-    // Remove the package with the given name
-    vendor.subscriptiontype = vendor.subscriptiontype.filter(
-      (pkg) => pkg.packageName !== packageName
+    // Remove subscription type by _id using $pull
+    const result = await Vendor.updateOne(
+      { Vendor_id: req.Vendor.Vendor_id },
+      { $pull: { subscriptiontype: { _id: subscriptionTypeId } } }
     );
 
-    if (vendor.subscriptiontype.length === initialLength) {
-      return res.status(404).json({ message: `Package '${packageName}' not found` });
+    if (result.modifiedCount === 0) {
+      return res.status(404).json({ message: "Subscription package not found" });
     }
 
-    await vendor.save();
-
     return res.status(200).json({
-      message: `Subscription package '${packageName}' deleted successfully`,
-      subscriptiontype: vendor.subscriptiontype,
+      message: "Subscription package deleted successfully",
     });
 
   } catch (error) {
+    console.error("Subscription delete error:", error);
     return res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 });
+
 
 // Route to add meal type
 router.post("/updateprofile/add/mealtype", isauthenticated, async (req, res) => {
