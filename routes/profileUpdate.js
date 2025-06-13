@@ -89,6 +89,44 @@ router.post("/updateprofile/subscriptiontype", isauthenticated, async (req, res)
       return res.status(400).json({ message: `Missing required fields: ${missingFields.join(", ")}` });
     }
 
+    // Prepare the subscription data with proper defaults
+    const subscriptionPackage = {
+      planName: subscriptionData.planName,
+      planDescription: subscriptionData.planDescription,
+      planDuration: subscriptionData.planDuration,
+      planCategory: subscriptionData.planCategory,
+      basePrice: subscriptionData.basePrice,
+      menuType: subscriptionData.menuType || "fixed",
+      // Simple meal fields (backward compatibility)
+      breakfast: subscriptionData.breakfast || "",
+      lunch: subscriptionData.lunch || "",
+      dinner: subscriptionData.dinner || "",
+      // Weekly meals structure
+      meals: subscriptionData.meals || {
+        Monday: { breakfast: "", lunch: "", dinner: "" },
+        Tuesday: { breakfast: "", lunch: "", dinner: "" },
+        Wednesday: { breakfast: "", lunch: "", dinner: "" },
+        Thursday: { breakfast: "", lunch: "", dinner: "" },
+        Friday: { breakfast: "", lunch: "", dinner: "" },
+        Saturday: { breakfast: "", lunch: "", dinner: "" },
+        Sunday: { breakfast: "", lunch: "", dinner: "" }
+      },
+      // Image references
+      menuImageDriveId: subscriptionData.menuImageDriveId || "",
+      bannerImageDriveId: subscriptionData.bannerImageDriveId || "",
+      breakfastImagesDriveIds: subscriptionData.breakfastImagesDriveIds || ["", "", "", "", ""],
+      lunchImagesDriveIds: subscriptionData.lunchImagesDriveIds || ["", "", "", "", ""],
+      dinnerImagesDriveIds: subscriptionData.dinnerImagesDriveIds || ["", "", "", "", ""],
+      // Delivery settings
+      deliveryTypes: subscriptionData.deliveryTypes || [],
+      tags: subscriptionData.tags || [],
+      maxSubscribers: subscriptionData.maxSubscribers || 0,
+      waitingList: subscriptionData.waitingList !== false, // default true
+      deliveryZones: subscriptionData.deliveryZones || [],
+      maxDeliveryDistance: subscriptionData.maxDeliveryDistance || 0,
+      customDeliveryZones: subscriptionData.customDeliveryZones || []
+    };
+
     // If _id is present, update existing subscriptionType
     if (subscriptionData._id) {
       const existingPackage = vendor.subscriptiontype.id(subscriptionData._id);
@@ -96,11 +134,11 @@ router.post("/updateprofile/subscriptiontype", isauthenticated, async (req, res)
         return res.status(404).json({ message: "Subscription package not found" });
       }
 
-      // Update fields
-      Object.assign(existingPackage, subscriptionData);
+      // Update all fields
+      Object.assign(existingPackage, subscriptionPackage);
     } else {
       // Else add a new package
-      vendor.subscriptiontype.push(subscriptionData);
+      vendor.subscriptiontype.push(subscriptionPackage);
     }
 
     await vendor.save();
