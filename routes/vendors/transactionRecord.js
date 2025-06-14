@@ -91,5 +91,44 @@ const{ Vendor_id} = req.Vendor;
     res.status(500).json({ message: 'Server Error', error });
   }
 });
+router.get("/monthly-summary", isauthenticated, async (req, res) => {
+  try {
+    const { Vendor_id } = req.Vendor;
+
+    // Start of current month
+    const startOfCurrentMonth = new Date();
+    startOfCurrentMonth.setDate(1);
+    startOfCurrentMonth.setHours(0, 0, 0, 0);
+
+    // Start of previous month
+    const startOfPreviousMonth = new Date(startOfCurrentMonth);
+    startOfPreviousMonth.setMonth(startOfPreviousMonth.getMonth() - 1);
+
+    // End of previous month (1 millisecond before current month starts)
+    const endOfPreviousMonth = new Date(startOfCurrentMonth.getTime() - 1);
+
+    // Fetch current month summary
+    const currentMonthSummary = await MOnthlySummary.findOne({
+      vendorId: Vendor_id,
+      createdAt: { $gte: startOfCurrentMonth }
+    });
+
+    // Fetch previous month summary
+    const previousMonthSummary = await MOnthlySummary.findOne({
+      vendorId: Vendor_id,
+      createdAt: { $gte: startOfPreviousMonth, $lte: endOfPreviousMonth }
+    });
+
+    res.status(200).json({
+      currentMonthSummary,
+      previousMonthSummary
+    });
+
+  } catch (error) {
+    console.error('Error fetching monthly summaries:', error);
+    res.status(500).json({ message: 'Server Error', error });
+  }
+});
+
 
 export default router;
