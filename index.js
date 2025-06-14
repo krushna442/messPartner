@@ -32,7 +32,8 @@ import wishlistROute from './routes/clients/wishlist.js';
 import settingRoute from './routes/clients/settings.js';
 import vendormenuroute from './routes/vendors/todaysmenu.js';
 import pendingsubscriberRoute from './routes/vendors/pendingSubscription.js';
-import driveAPIRoute from './routes/vendors/driveapi.js'
+import driveAPIRoute from './routes/vendors/driveapi.js';
+import transacronRecordRoute from './routes/vendors/transactionRecord.js';
 
 // Notification Routes
 import userNotificationRoute from './routes/notifications/user.js';
@@ -113,7 +114,8 @@ app.use('/api', wishlistROute);
 app.use ('/api',settingRoute);
 app.use('/api', vendormenuroute);
 app.use('/api',pendingsubscriberRoute);
-app.use('/api',driveAPIRoute)
+app.use('/api',driveAPIRoute);
+app.use('/api',transacronRecordRoute)
 // Socket.IO Events
 io.on('connection', (socket) => {
   console.log('Client connected');

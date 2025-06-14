@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 
 const TransactionSchema = new mongoose.Schema({
   Vendor_id: { type: String, required: true },
-  type: { type: String, enum: ['income', 'expense', 'payout'], required: true },
+  type: { type: String, enum: ['income', 'expense'], required: true },
   amount: { type: Number, required: true },
   category: { 
     type: String, 
@@ -30,7 +30,6 @@ const TransactionSchema = new mongoose.Schema({
     enum: ['upi', 'cash', 'bank_transfer', 'card', 'wallet'], 
     required: true 
   },
-  referenceId: { type: String }, // For tracking payment gateway references
   attachment: { type: String }, // URL to proof/document
   date: { type: Date, default: Date.now },
   recipient: { // For payouts
