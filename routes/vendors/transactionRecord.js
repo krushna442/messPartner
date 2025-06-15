@@ -5,10 +5,9 @@ import isauthenticated from '../../utils/authmiddlewware.js';
 const router = express.Router();
 
 
-router.post("/transaction", async (req, res) => {
+router.post("/transaction",isauthenticated, async (req, res) => {
   try {
     const {
-      Vendor_id,
       type,
       amount,
       category,
@@ -19,11 +18,11 @@ router.post("/transaction", async (req, res) => {
       date,
       recipient
     } = req.body;
-
+const {Vendor_id}= req.Vendor;
     // Create the transaction
     const transaction = await Transaction.create({
       Vendor_id,
-      type,
+          type,
       amount,
       category,
       description,
@@ -71,10 +70,22 @@ router.post("/transaction", async (req, res) => {
       });
 
     } else {
+            const startOfLastMonth = new Date(startOfMonth);
+      startOfLastMonth.setMonth(startOfLastMonth.getMonth() - 1);
+
+      const lastMonthSummary = await MOnthlySummary.findOne({
+        vendorId: Vendor_id,
+        createdAt: {
+          $gte: startOfLastMonth,
+          $lt: startOfMonth
+        }
+      });
+
+      const lastTotalEarnings = lastMonthSummary ? lastMonthSummary.totalEarnings : 0;
       // Update existing summary
       if (type === 'income') {
         summary.totalIncome += amount;
-        summary.totalEarnings += amount;
+        summary.totalEarnings =lastTotalEarnings+ summary.totalIncome;
       } else if (type === 'expense') {
         summary.totalExpenses += amount;
       }
