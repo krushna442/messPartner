@@ -5,7 +5,7 @@ import isauthenticated from '../../utils/authmiddlewware.js';
 const router = express.Router();
 
 
-router.post ("/transaction", async (req, res) => {
+router.post("/transaction", async (req, res) => {
   try {
     const {
       Vendor_id,
@@ -34,7 +34,7 @@ router.post ("/transaction", async (req, res) => {
       recipient
     });
 
-    // Get the month start date
+    // Get start of this month
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
@@ -46,21 +46,39 @@ router.post ("/transaction", async (req, res) => {
     });
 
     if (!summary) {
+      // Get last month's summary to get its totalEarnings
+      const startOfLastMonth = new Date(startOfMonth);
+      startOfLastMonth.setMonth(startOfLastMonth.getMonth() - 1);
+
+      const lastMonthSummary = await MOnthlySummary.findOne({
+        vendorId: Vendor_id,
+        createdAt: {
+          $gte: startOfLastMonth,
+          $lt: startOfMonth
+        }
+      });
+
+      const lastTotalEarnings = lastMonthSummary ? lastMonthSummary.totalEarnings : 0;
+
       // Create new MonthlySummary
       summary = new MOnthlySummary({
         vendorId: Vendor_id,
         totalIncome: type === 'income' ? amount : 0,
         totalExpenses: type === 'expense' ? amount : 0,
         netProfit: type === 'income' ? amount : -amount,
+        totalEarnings: lastTotalEarnings + (type === 'income' ? amount : 0),
         updatedAt: new Date()
       });
+
     } else {
       // Update existing summary
       if (type === 'income') {
         summary.totalIncome += amount;
+        summary.totalEarnings += amount;
       } else if (type === 'expense') {
         summary.totalExpenses += amount;
       }
+
       // Recalculate net profit
       summary.netProfit = summary.totalIncome - summary.totalExpenses;
       summary.updatedAt = new Date();
@@ -79,7 +97,8 @@ router.post ("/transaction", async (req, res) => {
     console.error('Transaction creation error:', error);
     res.status(500).json({ message: 'Server Error', error });
   }
-})
+});
+
 
 router.get("/transactions",isauthenticated, async (req, res) => {
   try {
