@@ -9,43 +9,25 @@ const router = express.Router();
 dotenv.config();
 
 router.post("/subscribtion", isAuthenticated, async (req, res) => {
-  const { user_id, Vendor_id, subscriptionType, mealtype, address1, address2 ,VendorData ,packageType, paymentId,paymentDetails } =req.body;
-  if(!paymentId){
-    res.status(300).json("paymentId is required")
-  }
-  const totalMeal = subscriptionType;
+  const {userData,  subscriptionType, address1, address2 ,VendorData , paymentDetails } =req.body;
+
   try {
-    const subscriptionDate = Date.now();
-    const subscriptionEndDate = new Date(subscriptionDate + totalMeal * 86400000);
+    const subscriptionEndDate = new Date(Date.now + subscriptionType.planDuration * 86400000);
 
     const subscriber = new Subscriber({
-      user_id: user_id,
-      Vendor_id: Vendor_id,
+      userData:userData,
       VendorData:VendorData,
-      mealtype: mealtype,
-      packageType:packageType,
-      user_name: req.user.name,
-      number: req.user.number,
       address1: address1,
       address2: address2,
-      subscriptionId: user_id + Vendor_id,
+      subscriptionId: `${userData.user_id}-${VendorData.Vendor_id}-${Date.now()}`,
       subscriptionType: subscriptionType,
-      subscriptionDate: new Date(subscriptionDate),
       subscriptionEndDate: subscriptionEndDate,
-      totalMeal: totalMeal,
-      amount:amount,
-      paymentId:paymentId,
       paymentDetails: paymentDetails // ✅ Add this line
 
     });
 
     await subscriber.save();
     // Update Vendor's mealToDeliver count
-    const vendor = await Vendor.findOneAndUpdate(
-      { Vendor_id },
-      { $inc: { mealToDeliver: totalMeal * 2 } }, // ✅ Increase mealToDeliver
-      { new: true }
-    );
 
     res.status(201).json({ message: "Subscription added successfully", subscriber });
   } catch (error) {

@@ -7,6 +7,7 @@ const TransactionSchema = new mongoose.Schema({
   amount: { type: Number, required: true },
   category: { 
     type: String, 
+    
     enum: [
       'order_payment', 
       'subscription_payment',
