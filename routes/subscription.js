@@ -12,8 +12,8 @@ router.post("/subscribtion", isAuthenticated, async (req, res) => {
   const {userData,  subscriptionType, address1, address2 ,VendorData , paymentDetails } =req.body;
 
   try {
-    const subscriptionEndDate = new Date(Date.now + subscriptionType.planDuration * 86400000);
-
+    const planDuration = subscriptionType.planDuration * 24 * 60 * 60 * 1000; // Convert days to milliseconds
+    const subscriptionEndDate = new Date(Date.now() + planDuration);
     const subscriber = new Subscriber({
       userData:userData,
       VendorData:VendorData,
