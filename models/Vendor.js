@@ -142,7 +142,8 @@ const subscriptionTypeSchema = new mongoose.Schema(
     customDeliveryZones: {
       type: [String],
       default: []
-    }
+    },
+    subscribers:{type:Number,default:0}
   },
   {
     timestamps: true  // Adds createdAt and updatedAt fields
