@@ -2,7 +2,9 @@ import express from 'express';
 import Subscriber from '../../models/subscriber.js';
 import isauthenticated from '../../utils/authmiddlewware.js';
 import mongoose from 'mongoose';
-
+import Vendor from "../models/Vendor.js"; // ✅ Correct (matches file name)
+import Transaction from "../models/transaction.js";
+import MOnthlySummary from "../models/monthlySummary.js";
 const router = express.Router();
 
 // Get pending subscription requests
@@ -113,13 +115,13 @@ router.post('/subscription/:id/status', isauthenticated, async (req, res) => {
             startOfMonth.setDate(1);
             startOfMonth.setHours(0, 0, 0, 0);
 
-            let summary = await MonthlySummary.findOne({
+            let summary = await MOnthlySummary.findOne({
                 vendorId: vendorId,
                 createdAt: { $gte: startOfMonth }
             }).session(session);
 
             if (!summary) {
-                summary = new MonthlySummary({
+                summary = new MOnthlySummary({
                     vendorId: vendorId,
                     totalIncome: subscription.subscriptionType.basePrice,
                     totalExpenses: 0,
