@@ -35,7 +35,7 @@ router.get('/subscription/requests', isauthenticated, async (req, res) => {
 });
 
 // Update subscription status (accept/reject)
-router.patch('/subscription/:id/status', isauthenticated, async (req, res) => {
+router.post('/subscription/:id/status', async (req, res) => {
     const session = await mongoose.startSession();
     session.startTransaction();
     
