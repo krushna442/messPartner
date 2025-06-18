@@ -18,7 +18,6 @@ router.get('/subscription/requests', isauthenticated, async (req, res) => {
 
         const subscribers = await Subscriber.find({
             'VendorData.Vendor_id': vendorId,
-            status: "pending"
         }).select('-__v -createdAt -updatedAt'); // Exclude unnecessary fields
 
         res.json({
