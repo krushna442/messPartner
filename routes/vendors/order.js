@@ -2,9 +2,9 @@ import express from 'express';
 import Subscriber from '../../models/subscriber.js';
 import isauthenticated from '../../utils/authmiddlewware.js';
 import mongoose from 'mongoose';
-import Vendor from "../models/Vendor.js"; // ✅ Correct (matches file name)
-import Transaction from "../models/transaction.js";
-import MOnthlySummary from "../models/monthlySummary.js";
+import Vendor from "../../models/Vendor.js"; // ✅ Correct (matches file name)
+import Transaction from "../../models/transaction.js";
+import MOnthlySummary from "../../models/monthlySummary.js";
 const router = express.Router();
 
 // Get pending subscription requests
