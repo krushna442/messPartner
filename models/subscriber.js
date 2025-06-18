@@ -16,7 +16,7 @@ const subscriberSchema = mongoose.Schema(
     mealOption: { type: Boolean, default: true },
     mealskipped:{type:Number,default:0},
     deliverygroup :{type:String},
-    pending:{type:Boolean,default:true},
+    status:{type:String,default:"pending"},
     paymentDetails: { type: Object },
     
     },
