@@ -62,13 +62,9 @@ router.post('/subscription/:id/status', isauthenticated, async (req, res) => {
         const updateData = {
             status,
             processedAt: new Date(),
-            processedBy: req.Vendor._id
+            processedBy: req.Vendor._id,
+            ...(status === 'rejected' && { rejectionReason: reason }) // Add rejection reason
         };
-
-        // Add rejection reason if status is rejected
-        if (status === 'rejected') {
-            updateData.rejectionReason = reason;
-        }
 
         // Find and update the subscription
         const subscription = await Subscriber.findOneAndUpdate(
@@ -91,7 +87,7 @@ router.post('/subscription/:id/status', isauthenticated, async (req, res) => {
             });
         }
 
-        // Business logic for accepted subscriptions only
+        // Business logic for accepted subscriptions
         if (status === 'accepted') {
             // ... your existing acceptance logic ...
         }
@@ -100,7 +96,81 @@ router.post('/subscription/:id/status', isauthenticated, async (req, res) => {
         res.json({
             success: true,
             message: `Subscription ${status} successfully`,
-            data: subscription
+            data: subscription // This now includes the rejectionReason
+        });
+
+    } catch (error) {
+        await session.abortTransaction();
+        console.error("Error updating subscription status:", error);
+        res.status(500).json({ 
+            success: false,
+            message: "Server error",
+            error: error.message 
+        });
+    } finally {
+        session.endSession();
+    }
+});router.post('/subscription/:id/status', isauthenticated, async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    
+    try {
+        const { id } = req.params;
+        const { status, reason } = req.body;
+        const vendorId = req.Vendor.Vendor_id;
+
+        // Validate input
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Invalid subscription ID" });
+        }
+
+        if (!['accepted', 'rejected'].includes(status)) {
+            return res.status(400).json({ message: "Invalid status. Must be 'accepted' or 'rejected'" });
+        }
+
+        if (status === 'rejected' && !reason) {
+            return res.status(400).json({ message: "Reason is required for rejection" });
+        }
+
+        // Prepare update object
+        const updateData = {
+            status,
+            processedAt: new Date(),
+            processedBy: req.Vendor._id,
+            ...(status === 'rejected' && { rejectionReason: reason }) // Add rejection reason
+        };
+
+        // Find and update the subscription
+        const subscription = await Subscriber.findOneAndUpdate(
+            {
+                _id: id,
+                'VendorData.Vendor_id': vendorId,
+                status: 'pending'
+            },
+            updateData,
+            { 
+                new: true,
+                session
+            }
+        );
+
+        if (!subscription) {
+            return res.status(404).json({ 
+                success: false,
+                message: "Subscription not found or already processed" 
+            });
+        }
+
+        // Business logic for accepted subscriptions
+        if (status === 'accepted') {
+            // ... your existing acceptance logic ...
+        }
+
+        await session.commitTransaction();
+        res.json({
+            success: true,
+            message: `Subscription ${status} successfully`,
+            data: subscription // This now includes the rejectionReason
         });
 
     } catch (error) {
