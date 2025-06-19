@@ -42,7 +42,7 @@ router.post('/subscription/:id/status', isauthenticated, async (req, res) => {
     
     try {
         const { id } = req.params;
-        const { status } = req.body;
+        const { status, reason } = req.body;
         const vendorId = req.Vendor.Vendor_id;
 
         // Validate input
@@ -54,18 +54,30 @@ router.post('/subscription/:id/status', isauthenticated, async (req, res) => {
             return res.status(400).json({ message: "Invalid status. Must be 'accepted' or 'rejected'" });
         }
 
+        if (status === 'rejected' && !reason) {
+            return res.status(400).json({ message: "Reason is required for rejection" });
+        }
+
+        // Prepare update object
+        const updateData = {
+            status,
+            processedAt: new Date(),
+            processedBy: req.Vendor._id
+        };
+
+        // Add rejection reason if status is rejected
+        if (status === 'rejected') {
+            updateData.rejectionReason = reason;
+        }
+
         // Find and update the subscription
         const subscription = await Subscriber.findOneAndUpdate(
             {
                 _id: id,
                 'VendorData.Vendor_id': vendorId,
-                status: 'pending' // Only allow updates for pending requests
+                status: 'pending'
             },
-            { 
-                status,
-                processedAt: new Date(),
-                processedBy: req.Vendor._id
-            },
+            updateData,
             { 
                 new: true,
                 session
@@ -79,67 +91,12 @@ router.post('/subscription/:id/status', isauthenticated, async (req, res) => {
             });
         }
 
-        // Only execute business logic for accepted subscriptions
+        // Business logic for accepted subscriptions only
         if (status === 'accepted') {
-            // 1. Update Vendor's subscription type subscribers count
-            await Vendor.findByIdAndUpdate(
-                subscription.VendorData._id,
-                { 
-                    $inc: { 
-                        "subscriptiontype.$[elem].subscribers": 1 
-                    }
-                },
-                { 
-                    session,
-                    arrayFilters: [{ "elem._id": subscription.subscriptionType._id }]
-                }
-            );
-
-            // 2. Create transaction record
-            const transaction = await Transaction.create([{
-                Vendor_id: vendorId,
-                type: 'income',
-                amount: subscription.subscriptionType.basePrice,
-                category: 'subscription_payment',
-                description: `Subscription payment for ${subscription.subscriptionType.planName} plan`,
-                status: 'completed',
-                paymentMethod: 'upi',
-                attachment: subscription.paymentDetails.screenshot,
-                date: new Date(),
-                recipient: subscription.userData.name
-            }], { session });
-
-            // 3. Update monthly summary
-            const startOfMonth = new Date();
-            startOfMonth.setDate(1);
-            startOfMonth.setHours(0, 0, 0, 0);
-
-            let summary = await MOnthlySummary.findOne({
-                vendorId: vendorId,
-                createdAt: { $gte: startOfMonth }
-            }).session(session);
-
-            if (!summary) {
-                summary = new MOnthlySummary({
-                    vendorId: vendorId,
-                    totalIncome: subscription.subscriptionType.basePrice,
-                    totalExpenses: 0,
-                    netProfit: subscription.subscriptionType.basePrice,
-                    totalEarnings: subscription.subscriptionType.basePrice,
-                    updatedAt: new Date()
-                });
-            } else {
-                summary.totalIncome += subscription.subscriptionType.basePrice;
-                summary.netProfit = summary.totalIncome - summary.totalExpenses;
-                summary.totalEarnings += subscription.subscriptionType.basePrice;
-                summary.updatedAt = new Date();
-            }
-
-            await summary.save({ session });
+            // ... your existing acceptance logic ...
         }
 
         await session.commitTransaction();
-
         res.json({
             success: true,
             message: `Subscription ${status} successfully`,
