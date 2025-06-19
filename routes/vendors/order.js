@@ -119,4 +119,147 @@ router.post('/subscription/:id/status', isauthenticated, async (req, res) => {
 // Get subscription by ID (for vendor to view details)
 
 
+router.get('/subscription/rejected', isauthenticated, async (req, res) => {
+    try {
+        const vendorId = req.Vendor.Vendor_id;
+
+        const rejectedSubscriptions = await Subscriber.find({
+            'VendorData.Vendor_id': vendorId,
+            status: 'rejected'
+        })
+        .sort({ processedAt: -1 }) // Sort by most recent rejections first
+        .select('-__v'); // Exclude version key
+
+        res.json({
+            success: true,
+            count: rejectedSubscriptions.length,
+            data: rejectedSubscriptions
+        });
+
+    } catch (error) {
+        console.error("Error fetching rejected subscriptions:", error);
+        res.status(500).json({ 
+            success: false,
+            message: "Server error",
+            error: error.message 
+        });
+    }
+});
+
+
+router.post('/subscription/:id/restore', isauthenticated, async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    
+    try {
+        const { id } = req.params;
+        const vendorId = req.Vendor.Vendor_id;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Invalid subscription ID" });
+        }
+
+        // Find and update the subscription
+        const subscription = await Subscriber.findOneAndUpdate(
+            {
+                _id: id,
+                'VendorData.Vendor_id': vendorId,
+                status: 'rejected' // Only allow restore for rejected requests
+            },
+            { 
+                $set: { status: 'accepted' },
+                $unset: { rejectionReason: 1 }, // Remove the rejection reason
+                processedAt: new Date(),
+                processedBy: req.Vendor._id
+            },
+            { 
+                new: true,
+                session
+            }
+        );
+
+        if (!subscription) {
+            return res.status(404).json({ 
+                success: false,
+                message: "Rejected subscription not found or already processed" 
+            });
+        }
+
+        // Execute the same business logic as acceptance
+        // 1. Update Vendor's subscription type subscribers count
+        await Vendor.findByIdAndUpdate(
+            subscription.VendorData._id,
+            { 
+                $inc: { 
+                    "subscriptiontype.$[elem].subscribers": 1 
+                }
+            },
+            { 
+                session,
+                arrayFilters: [{ "elem._id": subscription.subscriptionType._id }]
+            }
+        );
+
+        // 2. Create transaction record
+        const transaction = await Transaction.create([{
+            Vendor_id: vendorId,
+            type: 'income',
+            amount: subscription.subscriptionType.basePrice,
+            category: 'subscription_payment',
+            description: `Subscription payment for ${subscription.subscriptionType.planName} plan`,
+            status: 'completed',
+            paymentMethod: 'upi',
+            attachment: subscription.paymentDetails.screenshot,
+            date: new Date(),
+            recipient: subscription.userData.name
+        }], { session });
+
+        // 3. Update monthly summary
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+
+        let summary = await MOnthlySummary.findOne({
+            vendorId: vendorId,
+            createdAt: { $gte: startOfMonth }
+        }).session(session);
+
+        if (!summary) {
+            summary = new MOnthlySummary({
+                vendorId: vendorId,
+                totalIncome: subscription.subscriptionType.basePrice,
+                totalExpenses: 0,
+                netProfit: subscription.subscriptionType.basePrice,
+                totalEarnings: subscription.subscriptionType.basePrice,
+                updatedAt: new Date()
+            });
+        } else {
+            summary.totalIncome += subscription.subscriptionType.basePrice;
+            summary.netProfit = summary.totalIncome - summary.totalExpenses;
+            summary.totalEarnings += subscription.subscriptionType.basePrice;
+            summary.updatedAt = new Date();
+        }
+
+        await summary.save({ session });
+
+        await session.commitTransaction();
+
+        res.json({
+            success: true,
+            message: "Subscription restored successfully",
+            data: subscription
+        });
+
+    } catch (error) {
+        await session.abortTransaction();
+        console.error("Error restoring subscription:", error);
+        res.status(500).json({ 
+            success: false,
+            message: "Server error",
+            error: error.message 
+        });
+    } finally {
+        session.endSession();
+    }
+});
 export default router;
