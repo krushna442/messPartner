@@ -12,7 +12,7 @@ router.get('/myclients', isauthenticated, async (req, res) => {
     const Vendor_id = req.Vendor.Vendor_id;
 
     const subscriptionDetails = await Subscriber.find({
-      Vendor_id: Vendor_id,
+     'VendorData.Vendor_id':Vendor_id,
       subscriptionEndDate: { $gte: Date.now() }
     });
 
@@ -30,7 +30,7 @@ router.get('/allclients', isauthenticated, async (req, res) => {
     const Vendor_id = req.Vendor.Vendor_id;
 
     const subscriptionDetails = await Subscriber.find({
-      Vendor_id: Vendor_id,
+      'VendorData.Vendor_id':Vendor_id,
     });
 
     res.status(200).json({
