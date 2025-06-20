@@ -6,7 +6,7 @@ const router = express.Router();
 router.get("/vendor/clients/active",isauthenticated, async (req, res) => {
   try {
     const Vendor_id= req.Vendor.Vendor_id;
-    const activeClients = await Subscriber.find({ mealskipped: 0 ,Vendor_id:Vendor_id,  subscriptionEndDate: { $gte: Date.now() }
+    const activeClients = await Subscriber.find({ mealskipped: 0 ,'VendorData.Vendor_id':Vendor_id,  subscriptionEndDate: { $gte: Date.now() }
 });
     res.json({ success: true, data: activeClients });
   } catch (error) {
@@ -20,7 +20,7 @@ router.get("/vendor/clients/paused",isauthenticated, async (req, res) => {
   try {
     const Vendor_id= req.Vendor.Vendor_id;
 
-    const pausedClients = await Subscriber.find({ mealskipped: { $gt: 2 } ,Vendor_id:Vendor_id , subscriptionEndDate: { $gte: Date.now() }});
+    const pausedClients = await Subscriber.find({ mealskipped: { $gt: 2 } ,'VendorData.Vendor_id':Vendor_id , subscriptionEndDate: { $gte: Date.now() }});
     res.json({ success: true, data: pausedClients });
   } catch (error) {
     console.error(error);
@@ -33,7 +33,7 @@ router.get("/vendor/clients/exprired",isauthenticated, async (req, res) => {
     const Vendor_id= req.Vendor.Vendor_id;
 
     const expiredsubscription = await Subscriber.find({
-      subscriptionEndDate: { $lt: new Date() },Vendor_id:Vendor_id,
+      subscriptionEndDate: { $lt: new Date() },'VendorData.Vendor_id':Vendor_id,
     });
 
     res.json({ success: true, data: expiredsubscription });
@@ -60,7 +60,7 @@ router.get("/vendor/clients/expiringsoon", isauthenticated, async (req, res) => 
         $gte: now, 
         $lte: threeDaysLater,
       },
-      Vendor_id: Vendor_id,
+      'VendorData.Vendor_id':Vendor_id,
       totalMeal: { $gt: 15 }, 
     });
 
