@@ -8,9 +8,6 @@ import Client from "../models/Client.js";
 
 const router = express.Router();
 
-
-
-
 // Helper function to get current meal period
 const getCurrentMealPeriod = () => {
   const currentHour = new Date().getHours();
@@ -22,7 +19,6 @@ const getCurrentMealPeriod = () => {
 // Main meal processing function
 const fetchAndStoreMeals = async () => {
   try {
-    console.log("Running scheduled meal count fetch...");
     const today = new Date().toISOString().split("T")[0];
     const currentMealPeriod = getCurrentMealPeriod();
 
@@ -50,7 +46,6 @@ const fetchAndStoreMeals = async () => {
     }).populate('subscriptionType');
 
     if (!activeSubscribers.length) {
-      console.log("No active subscribers found.");
       return { success: true, message: "No active subscribers found" };
     }
 
@@ -63,10 +58,9 @@ const fetchAndStoreMeals = async () => {
       if (!Vendor_id) continue;
 
       const subscriptionType = subscriber.subscriptionType;
-      const subscriptionTypeId = subscriptionType._id;
-      const deliveryTypes = subscriptionType.deliveryTypes || [];
+      const subscriptionTypeId = subscriptionType?._id;
       
-      // Skip if not current meal period
+      const deliveryTypes = subscriptionType?.deliveryTypes || ['breakfast', 'lunch', 'dinner'];
       if (!deliveryTypes.map(t => t.toLowerCase()).includes(currentMealPeriod)) {
         continue;
       }
@@ -93,8 +87,8 @@ const fetchAndStoreMeals = async () => {
       
       if (!mealRecordUpdates[Vendor_id][subscriptionTypeId]) {
         mealRecordUpdates[Vendor_id][subscriptionTypeId] = {
-          planName: subscriptionType.planName,
-          planCategory: subscriptionType.planCategory,
+          planName: subscriptionType?.planName || 'Unknown',
+          planCategory: subscriptionType?.planCategory || 'Regular',
           subscribers: [],
           total: 0
         };
@@ -156,7 +150,6 @@ const fetchAndStoreMeals = async () => {
       await Mealrecord.bulkWrite(updateOps);
     }
 
-    console.log(`Successfully updated ${currentMealPeriod} records`);
     return { success: true, message: `Updated ${currentMealPeriod} records` };
 
   } catch (error) {
@@ -188,8 +181,7 @@ router.get("/mealcount", isauthenticated, async (req, res) => {
     console.error("Error fetching meal records:", error);
     res.status(500).json({
       success: false,
-      message: "Failed to fetch meal records",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined
+      message: "Failed to fetch meal records"
     });
   }
 });
@@ -216,9 +208,10 @@ router.post("/update-meals", isauthenticated, async (req, res) => {
       return res.status(500).json(result);
     }
 
+    const today = new Date().toISOString().split("T")[0];
     const updatedRecord = await Mealrecord.findOne({
       Vendor_id: req.Vendor.Vendor_id,
-      date: new Date().toISOString().split("T")[0]
+      date: today
     }).lean();
 
     res.status(200).json({
@@ -228,21 +221,22 @@ router.post("/update-meals", isauthenticated, async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Error in manual update:", error);
+    console.error("Error updating meals:", error);
     res.status(500).json({
       success: false,
-      message: "Failed to update meals",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined
+      message: "Failed to update meals"
     });
   }
 });
 
 // Scheduled jobs
 cron.schedule("0 5,11,17 * * *", async () => {
-  console.log("Running scheduled meal update at", new Date().toISOString());
-  await fetchAndStoreMeals();
+  try {
+    await fetchAndStoreMeals();
+  } catch (error) {
+    console.error("Error in scheduled meal update:", error);
+  }
 });
-
 
 router.post("/addgroup", async (req, res) => {
   try {
@@ -255,7 +249,11 @@ router.post("/addgroup", async (req, res) => {
     if (result.matchedCount === 0) {
       return res.status(404).json({ message: "Client not found" });
     }
-    res.status(200).json({ message: "Delivery address added successfully", matchedDocuments: result.matchedCount, modifiedDocuments: result.modifiedCount });
+    res.status(200).json({ 
+      message: "Delivery address added successfully", 
+      matchedDocuments: result.matchedCount, 
+      modifiedDocuments: result.modifiedCount 
+    });
   } catch (error) {
     console.error("Error adding delivery group:", error);
     res.status(500).json({ message: "Server error" });
