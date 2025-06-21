@@ -8,225 +8,241 @@ import Client from "../models/Client.js";
 
 const router = express.Router();
 
-// Function to fetch and update/store meal records
-// const fetchAndStoreMeals = async () => {
-//   try {
-//     const mealoffsubscribers = await Subscriber.find({ mealOption: false });
 
-//     for (const subscriber of mealoffsubscribers) {
-//       subscriber.mealskipped += 1;
-//       subscriber.subscriptionEndDate = new Date(subscriber.subscriptionEndDate.getTime() + 8 * 60 * 60 * 1000);
-//       await subscriber.save();
-//     }
 
-//     const subscribers = await Subscriber.find({ mealOption: true });
-//     if (!subscribers.length) {
-//       console.log("No subscribers found.");
-//       return;
-//     }
 
-//     const vendorMeals = {};
-//     const currentTime = new Date();
-//     const today = new Date().toISOString().split("T")[0];
+// Helper function to get current meal period
+const getCurrentMealPeriod = () => {
+  const currentHour = new Date().getHours();
+  if (currentHour >= 4 && currentHour < 10) return 'breakfast';
+  if (currentHour >= 10 && currentHour < 16) return 'lunch';
+  return 'dinner';
+};
 
-//     for (const subscriber of subscribers) {
-//       subscriber.mealskipped = 0;
-//       const { Vendor_id, user_id } = subscriber;
-//       if (!vendorMeals[Vendor_id]) {
-//         vendorMeals[Vendor_id] = { breakfast: [], lunch: [], dinner: [] };
-//       }
-//       const currentHour = currentTime.getHours();
-
-//       if (currentHour >= 4 && currentHour < 10) {
-//         vendorMeals[Vendor_id].breakfast.push(user_id);
-//         subscriber.receivedBreakfast += 1;
-//       } else if (currentHour >= 10 && currentHour < 18) {
-//         vendorMeals[Vendor_id].lunch.push(user_id);
-//         subscriber.receivedLunch += 1;
-//       } else {
-//         vendorMeals[Vendor_id].dinner.push(user_id);
-//         subscriber.receivedDinner += 1;
-//       }
-//       await subscriber.save();
-//     }
-
-//     for (const [vendorId, meals] of Object.entries(vendorMeals)) {
-//       const existingRecord = await Mealrecord.findOne({ Vendor_id: vendorId, date: today });
-
-//       if (existingRecord) {
-//         if (meals.breakfast.length) existingRecord.breakfast.push(...meals.breakfast);
-//         if (meals.lunch.length) existingRecord.lunch.push(...meals.lunch);
-//         if (meals.dinner.length) existingRecord.dinner.push(...meals.dinner);
-//         await existingRecord.save();
-//       } else {
-//         await Mealrecord.create({
-//           Vendor_id: vendorId,
-//           date: today,
-//           breakfast: meals.breakfast,
-//           lunch: meals.lunch,
-//           dinner: meals.dinner,
-//         });
-//       }
-//     }
-//     console.log("Meal records updated successfully!");
-//   } catch (error) {
-//     console.error("Error fetching and storing meals:", error);
-//   }
-// };
-
+// Main meal processing function
 const fetchAndStoreMeals = async () => {
   try {
-      console.log("Running scheduled meal count fetch...");
+    console.log("Running scheduled meal count fetch...");
+    const today = new Date().toISOString().split("T")[0];
+    const currentMealPeriod = getCurrentMealPeriod();
 
-      // 1️⃣ Fetch Subscribers Who Skipped Meals (mealOption: false)
-      const mealOffSubscribers = await Subscriber.find({ mealOption: false ,  subscriptionEndDate: { $gte: Date.now() } });
+    // 1. Process skipped meals
+    await Subscriber.updateMany(
+      { 
+        mealOption: false,
+        status: "accepted",
+        subscriptionEndDate: { $gte: new Date() } 
+      },
+      { 
+        $inc: { mealskipped: 1 },
+        $set: { 
+          subscriptionEndDate: new Date(new Date().getTime() + 8 * 60 * 60 * 1000),
+          updatedAt: new Date()
+        }
+      }
+    );
 
-      for (const subscriber of mealOffSubscribers) {
-          subscriber.mealskipped += 1;
-          subscriber.subscriptionEndDate = new Date(
-              subscriber.subscriptionEndDate.getTime() + 8 * 60 * 60 * 1000
-          );
-          await subscriber.save();
+    // 2. Process active subscribers
+    const activeSubscribers = await Subscriber.find({ 
+      mealOption: true, 
+      status: "accepted",
+      subscriptionEndDate: { $gte: new Date() }
+    }).populate('subscriptionType');
+
+    if (!activeSubscribers.length) {
+      console.log("No active subscribers found.");
+      return { success: true, message: "No active subscribers found" };
+    }
+
+    // 3. Prepare bulk operations
+    const bulkSubscriberUpdates = [];
+    const mealRecordUpdates = {};
+
+    for (const subscriber of activeSubscribers) {
+      const Vendor_id = subscriber.VendorData?.Vendor_id;
+      if (!Vendor_id) continue;
+
+      const subscriptionType = subscriber.subscriptionType;
+      const subscriptionTypeId = subscriptionType._id;
+      const deliveryTypes = subscriptionType.deliveryTypes || [];
+      
+      // Skip if not current meal period
+      if (!deliveryTypes.map(t => t.toLowerCase()).includes(currentMealPeriod)) {
+        continue;
       }
 
-      // 2️⃣ Fetch Active Subscribers (mealOption: true)
-      const subscribers = await Subscriber.find({ mealOption: true , subscriptionEndDate: { $gte: Date.now() }});
-
-      if (!subscribers.length) {
-          console.log("No active subscribers found.");
-          return;
-      }
-
-      const vendorMeals = {}; // Stores grouped data
-      const currentTime = new Date();
-      const today = new Date().toISOString().split("T")[0];
-
-      for (const subscriber of subscribers) {
-          subscriber.mealskipped = 0;
-
-          const { Vendor_id, user_id, mealtype } = subscriber;
-
-          // Initialize vendor data if not present
-          if (!vendorMeals[Vendor_id]) {
-              vendorMeals[Vendor_id] = {
-                  breakfast: { veg: [], nonVeg: [] },
-                  lunch: { veg: [], nonVeg: [] },
-                  dinner: { veg: [], nonVeg: [] },
-                  totalmeal: 0, // ✅ Now correctly inside each vendor object
-              };
+      // Prepare subscriber update
+      const mealField = `received${currentMealPeriod.charAt(0).toUpperCase() + currentMealPeriod.slice(1)}`;
+      bulkSubscriberUpdates.push({
+        updateOne: {
+          filter: { _id: subscriber._id },
+          update: {
+            $inc: { [mealField]: 1 },
+            $set: { 
+              mealskipped: 0,
+              updatedAt: new Date()
+            }
           }
+        }
+      });
 
-          const currentHour = currentTime.getHours();
-          const isVeg = mealtype === "veg";
-
-          if (currentHour >= 4 && currentHour < 10) {
-              // Breakfast Time
-              isVeg
-                  ? vendorMeals[Vendor_id].breakfast.veg.push(user_id)
-                  : vendorMeals[Vendor_id].breakfast.nonVeg.push(user_id);
-              subscriber.receivedBreakfast += 1;
-          } else if (currentHour >= 10 && currentHour < 17) {
-              // Lunch Time
-              isVeg
-                  ? vendorMeals[Vendor_id].lunch.veg.push(user_id)
-                  : vendorMeals[Vendor_id].lunch.nonVeg.push(user_id);
-              subscriber.receivedLunch += 1;
-          } else {
-              // Dinner Time
-              isVeg
-                  ? vendorMeals[Vendor_id].dinner.veg.push(user_id)
-                  : vendorMeals[Vendor_id].dinner.nonVeg.push(user_id);
-              subscriber.receivedDinner += 1;
-          }
-
-          // ✅ Increment totalmeal count inside the vendor’s object
-          vendorMeals[Vendor_id].totalmeal += 1;
-
-          await subscriber.save();
+      // Prepare meal record update
+      if (!mealRecordUpdates[Vendor_id]) {
+        mealRecordUpdates[Vendor_id] = {};
+      }
+      
+      if (!mealRecordUpdates[Vendor_id][subscriptionTypeId]) {
+        mealRecordUpdates[Vendor_id][subscriptionTypeId] = {
+          planName: subscriptionType.planName,
+          planCategory: subscriptionType.planCategory,
+          subscribers: [],
+          total: 0
+        };
       }
 
-      // 3️⃣ Store Grouped Meal Records
-      for (const [vendorId, meals] of Object.entries(vendorMeals)) {
-          const existingRecord = await Mealrecord.findOne({
+      mealRecordUpdates[Vendor_id][subscriptionTypeId].subscribers.push(subscriber.toObject());
+      mealRecordUpdates[Vendor_id][subscriptionTypeId].total += 1;
+    }
+
+    // 4. Execute bulk subscriber updates
+    if (bulkSubscriberUpdates.length > 0) {
+      await Subscriber.bulkWrite(bulkSubscriberUpdates);
+    }
+
+    // 5. Update meal records
+    for (const [vendorId, subTypes] of Object.entries(mealRecordUpdates)) {
+      const updateOps = Object.entries(subTypes).map(([subTypeId, data]) => ({
+        updateOne: {
+          filter: { 
+            Vendor_id: vendorId, 
+            date: today,
+            "subscriptionTypes.subscriptionTypeId": new mongoose.Types.ObjectId(subTypeId)
+          },
+          update: {
+            $set: {
+              [`subscriptionTypes.$.meals.${currentMealPeriod}`]: data.subscribers,
+              "subscriptionTypes.$.totalMeals": data.total,
+              "subscriptionTypes.$.planName": data.planName,
+              "subscriptionTypes.$.planCategory": data.planCategory,
+              updatedAt: new Date()
+            }
+          }
+        }
+      }));
+
+      // Add upsert operation for new records
+      updateOps.push({
+        updateOne: {
+          filter: { Vendor_id: vendorId, date: today },
+          update: {
+            $setOnInsert: {
               Vendor_id: vendorId,
               date: today,
-          });
+              subscriptionTypes: Object.entries(subTypes).map(([id, data]) => ({
+                subscriptionTypeId: id,
+                planName: data.planName,
+                planCategory: data.planCategory,
+                meals: { [currentMealPeriod]: data.subscribers },
+                totalMeals: data.total
+              })),
+              createdAt: new Date(),
+              updatedAt: new Date()
+            }
+          },
+          upsert: true
+        }
+      });
 
-          if (existingRecord) {
-              // Append new subscribers to existing records
-              if (meals.breakfast.veg.length)
-                  existingRecord.breakfast.veg.push(...meals.breakfast.veg);
-              if (meals.breakfast.nonVeg.length)
-                  existingRecord.breakfast.nonVeg.push(...meals.breakfast.nonVeg);
-              if (meals.lunch.veg.length)
-                  existingRecord.lunch.veg.push(...meals.lunch.veg);
-              if (meals.lunch.nonVeg.length)
-                  existingRecord.lunch.nonVeg.push(...meals.lunch.nonVeg);
-              if (meals.dinner.veg.length)
-                  existingRecord.dinner.veg.push(...meals.dinner.veg);
-              if (meals.dinner.nonVeg.length)
-                  existingRecord.dinner.nonVeg.push(...meals.dinner.nonVeg);
-              
-              existingRecord.totalmeal += meals.totalmeal; // ✅ Updating total meal count
-              await existingRecord.save();
-          } else {
-              // Create new meal record
-              await Mealrecord.create({
-                  Vendor_id: vendorId,
-                  date: today,
-                  breakfast: meals.breakfast,
-                  lunch: meals.lunch,
-                  dinner: meals.dinner,
-                  totalmeal: meals.totalmeal, // ✅ Storing total meal count
-              });
-          }
-      }
+      await Mealrecord.bulkWrite(updateOps);
+    }
 
-      console.log("Meal records updated successfully!");
+    console.log(`Successfully updated ${currentMealPeriod} records`);
+    return { success: true, message: `Updated ${currentMealPeriod} records` };
+
   } catch (error) {
-      console.error("Error fetching and storing meals:", error);
+    console.error("Error in fetchAndStoreMeals:", error);
+    return { success: false, message: error.message };
   }
 };
 
-
+// API Endpoint to get meal counts
 router.get("/mealcount", isauthenticated, async (req, res) => {
   try {
-    if (!req.Vendor || !req.Vendor.Vendor_id) {
-      return res.status(400).json({ message: "Vendor ID missing in request." });
+    if (!req.Vendor?.Vendor_id) {
+      return res.status(400).json({ success: false, message: "Vendor ID missing" });
     }
     
     const today = new Date().toISOString().split("T")[0];
-    const mealdata = await Mealrecord.find({ Vendor_id: req.Vendor.Vendor_id, date: today });
-    res.status(200).json(mealdata);
+    const record = await Mealrecord.findOne({
+      Vendor_id: req.Vendor.Vendor_id,
+      date: today
+    }).lean();
+
+    res.status(200).json({
+      success: true,
+      data: record || null,
+      lastUpdated: record?.updatedAt
+    });
+
   } catch (error) {
     console.error("Error fetching meal records:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch meal records",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined
+    });
   }
 });
 
-router.post("/userdetail", async (req, res) => {
+// API Endpoint to manually trigger update
+router.post("/update-meals", isauthenticated, async (req, res) => {
   try {
-    const { user_id } = req.body;
-    const user = await Client.findOne({ user_id });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    // Rate limiting - check last update
+    const lastUpdate = await Mealrecord.findOne({
+      Vendor_id: req.Vendor.Vendor_id
+    }).sort({ updatedAt: -1 });
+
+    if (lastUpdate && (Date.now() - lastUpdate.updatedAt < 30 * 60 * 1000)) {
+      return res.status(200).json({
+        success: true,
+        message: "Meals updated recently",
+        nextUpdate: new Date(lastUpdate.updatedAt.getTime() + 30 * 60 * 1000),
+        data: lastUpdate
+      });
     }
-    res.status(200).json(user);
+
+    const result = await fetchAndStoreMeals();
+    if (!result.success) {
+      return res.status(500).json(result);
+    }
+
+    const updatedRecord = await Mealrecord.findOne({
+      Vendor_id: req.Vendor.Vendor_id,
+      date: new Date().toISOString().split("T")[0]
+    }).lean();
+
+    res.status(200).json({
+      success: true,
+      message: "Meal counts updated",
+      data: updatedRecord
+    });
+
   } catch (error) {
-    console.error("Error fetching user details:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error("Error in manual update:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update meals",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined
+    });
   }
 });
 
-cron.schedule("0 4  * * *", () => {
-  console.log("Running scheduled meal count fetch at 4 AM & 6 PM...");
-  fetchAndStoreMeals();
+// Scheduled jobs
+cron.schedule("0 5,11,17 * * *", async () => {
+  console.log("Running scheduled meal update at", new Date().toISOString());
+  await fetchAndStoreMeals();
 });
 
-cron.schedule("42 10 * * *", () => {
-  console.log("Running scheduled meal count fetch at 11:48 AM...");
-  fetchAndStoreMeals();
-});
 
 router.post("/addgroup", async (req, res) => {
   try {

@@ -1,22 +1,21 @@
 import mongoose from "mongoose";
 
-const mealrecordSchema = new mongoose.Schema({
-    Vendor_id: { type: String, required: true },
-    date: { type: Date, required: true },
-    breakfast: {
-        veg: { type: [String], default: [] }, // Array of user IDs for veg meals
-        nonVeg: { type: [String], default: [] } // Array of user IDs for non-veg meals
+const mealRecordSchema = new mongoose.Schema({
+  Vendor_id: { type: String, required: true },
+  date: { type: String, required: true },
+  subscriptionTypes: [{
+    subscriptionTypeId: { type: mongoose.Schema.Types.ObjectId, required: true },
+    planName: { type: String },
+    planCategory: { type: String },
+    meals: {
+      // Dynamic meal types based on deliveryTypes
+      // Example: { breakfast: [], lunch: [], dinner: [] }
     },
-    lunch: {
-        veg: { type: [String], default: [] },
-        nonVeg: { type: [String], default: [] }
-    },
-    dinner: {
-        veg: { type: [String], default: [] },
-        nonVeg: { type: [String], default: [] }
-    },
-    totalmeal: { type: Number, default: 0 } // Total number of meals provided
-});
+    totalMeals: { type: Number, default: 0 }
+  }],
+  createdAt: { type: Date, default: Date.now }
+}, { strict: false }); // strict: false allows dynamic fields in meals object
 
-const Mealrecord = mongoose.model("Mealrecord", mealrecordSchema);
-export default Mealrecord;
+const MealRecord = mongoose.model("MealRecord", mealRecordSchema);
+
+export default MealRecord;
