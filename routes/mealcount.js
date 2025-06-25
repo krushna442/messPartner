@@ -10,7 +10,7 @@ const router = express.Router();
 
 // Helper function to get current meal period
 const getCurrentMealPeriod = () => {
-  const currentHour = new Date().getHours();
+const currentHour = new Date().getUTCHours(); // Use UTC hours for meal period
   if (currentHour >= 4 && currentHour < 10) return 'breakfast';
   if (currentHour >= 10 && currentHour < 16) return 'lunch';
   return 'dinner';
@@ -19,9 +19,9 @@ const getCurrentMealPeriod = () => {
 // Main meal processing function
 const fetchAndStoreMeals = async () => {
   try {
-    const today = new Date().toISOString().split("T")[0];
+const today = new Date().toISOString().split("T")[0]; // Already UTC
     const currentMealPeriod = getCurrentMealPeriod();
-
+console.log("Server Time:", new Date(), "UTC Hour:", new Date().getUTCHours());
     // 1. Process skipped meals
     await Subscriber.updateMany(
       { 
@@ -44,7 +44,7 @@ const fetchAndStoreMeals = async () => {
       status: "accepted",
       subscriptionEndDate: { $gte: new Date() }
     }).populate('subscriptionType');
-
+console.log("Active Subscribers Count:", activeSubscribers.length);
     if (!activeSubscribers.length) {
       return { success: true, message: "No active subscribers found" };
     }
@@ -146,8 +146,10 @@ const fetchAndStoreMeals = async () => {
           upsert: true
         }
       });
+console.log("Mealrecord Update Operations:", updateOps); // Log the ops
 
-      await Mealrecord.bulkWrite(updateOps);
+     const bulkWriteResult= await Mealrecord.bulkWrite(updateOps);
+     console.log("BulkWrite Result:", bulkWriteResult);
     }
 
     return { success: true, message: `Updated ${currentMealPeriod} records` };
@@ -189,6 +191,14 @@ router.get("/mealcount", isauthenticated, async (req, res) => {
 // API Endpoint to manually trigger update
 router.post("/update-meals", isauthenticated, async (req, res) => {
   try {
+      console.log("Vendor ID:", req.Vendor?.Vendor_id); // Log Vendor_id
+  if (!req.Vendor?.Vendor_id) {
+    return res.status(400).json({ success: false, message: "Vendor ID missing" });
+  }
+        console.log("DB Connection State:", mongoose.connection.readyState); // 1 = connected
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(500).json({ success: false, message: "DB not connected" });
+    }
     // Rate limiting - check last update
     const lastUpdate = await Mealrecord.findOne({
       Vendor_id: req.Vendor.Vendor_id
