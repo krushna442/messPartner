@@ -1,40 +1,52 @@
 import mongoose from "mongoose";
 import { type } from "os";
 
-const deliveryListSchema = new mongoose.Schema(
-  {
-    Vendor_id: { type: String, required: true },
-    shopname: {type:String},
-    date: { type: String, required: true },
-    mealType: { type: String, required: true },
-    deliveryGroups: [
-      {
-        groupName: { type: String },
-        veg: [
-          {
-            user_id: { type: String },
-            user_name: { type: String },
-            number: { type: Number },
-            address1:{type:String},
-            address2:{type:String},
-            _id: false // disable auto _id for each user object
-          }
-        ],
-        nonVeg: [
-          {
-            user_id: { type: String },
-            user_name: { type: String },
-            number: { type: Number },
-            address1:{type:String},
-            address2:{type:String},
-            _id: false // disable auto _id for each user object
-          }
-        ]
-      }
-    ]
-  },
-  { timestamps: true }
-);
+const deliveryRecordSchema = new mongoose.Schema({
+  Vendor_id: { type: String, required: true },
+  date: { type: String, required: true },
+  deliveryGroup:[  {
+    groupName:{type:String},
+    agentData: {
+      name: { type: String, },
+      number: { type: String, },
+    },
+    meals: {
+      breakfast: [
+        {
+          subscriber: { type: Object },
+          status: {
+            type: String,
+            enum: ["pending", "delivered", "skipped"],
+            default: "pending",
+          },
+        },
+      ],
+      lunch: [
+        {
+          subscriber: { type: Object },
+          status: {
+            type: String,
+            enum: ["pending", "delivered", "skipped"],
+            default: "pending",
+          },
+        },
+      ],
+      dinner: [
+        {
+          subscriber: { type: Object },
+          status: {
+            type: String,
+            enum: ["pending", "delivered", "skipped"],
+            default: "pending",
+          },
+        },
+      ],
+    },
+  }],
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
 
-const DeliveryList = mongoose.model("DeliveryList", deliveryListSchema);
-export default DeliveryList;
+const DeliveryRecord = mongoose.model("DeliveryRecord", deliveryRecordSchema);
+
+export default DeliveryRecord;

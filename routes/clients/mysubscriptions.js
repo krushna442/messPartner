@@ -11,7 +11,7 @@ dotenv.config();
 router.get('/mysubscriptions/active', isAuthenticated, async (req, res) => {
   try {
     const subscriptions = await Subscriber.find({
-      user_id: req.user.user_id,
+      user_id: req.user.user_id,status: "accepted",
       subscriptionEndDate: { $gt: new Date() }
     }).sort({ subscriptionEndDate: 1 });
 
@@ -28,7 +28,7 @@ router.get('/mysubscriptions/active', isAuthenticated, async (req, res) => {
 router.get('/mysubscriptions/expired', isAuthenticated, async (req, res) => {
   try {
     const subscriptions = await Subscriber.find({
-      user_id: req.user.user_id,
+      user_id: req.user.user_id,status: "accepted",
       subscriptionEndDate: { $lt: new Date() }
     }).sort({ subscriptionEndDate: -1 });
 
@@ -48,7 +48,7 @@ router.get('/mysubscriptions/expiringsoon', isAuthenticated, async (req, res) =>
     const threeDaysLater = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000); // 3 days in ms
 
     const subscriptions = await Subscriber.find({
-      user_id: req.user.user_id,
+      user_id: req.user.user_id,status: "accepted",
       subscriptionEndDate: { $gt: now, $lt: threeDaysLater }
     }).sort({ subscriptionEndDate: 1 });
 
