@@ -12,14 +12,13 @@ const upload = multer({ storage: storage });
 const router = express.Router();
 
 // ✅ Route to submit feedback with an image
-router.post('/user/feedback', isAuthenticated, upload.single('image'), async (req, res) => {
+router.post('/user/feedback', isAuthenticated, async (req, res) => {
     try {
         // ✅ Ensure body fields are properly extracted
-        const { Vendor_id, feedback, rating } = req.body;
-        const { user_id, name,number } = req.user;
+        const { subscriptioData, feedback, rating ,image } = req.body;
 
         // ✅ Ensure feedback and rating exist
-        if (!Vendor_id || !feedback || !rating) {
+        if (!subscriptioData || !feedback || !rating) {
             return res.status(400).json({ message: "Vendor_id, feedback, and rating are required!" });
         }
 
@@ -30,17 +29,13 @@ router.post('/user/feedback', isAuthenticated, upload.single('image'), async (re
         }
 
         // ✅ Process image if provided
-        const imageBase64 = req.file ? req.file.buffer.toString("base64") : null;
 
         // ✅ Store feedback in the database
         const newFeedback = await Feedback.create({ 
-            Vendor_id, 
+            subscriptioData, 
             feedback, 
-            rating: numericRating, 
-            user_id, 
-            name, 
-            number  ,
-            image: imageBase64 
+            rating: numericRating,
+            image
         });
 
         res.status(201).json({ message: "Feedback submitted successfully", feedback: newFeedback });
@@ -52,7 +47,7 @@ router.post('/user/feedback', isAuthenticated, upload.single('image'), async (re
 router.get ('/show/feedback',isAuthenticated,async(req,res)=>{
     try{
     const {user_id}= req.user;
-    const feedback = await Feedback.find({user_id});
+    const feedback = await Feedback.find({'subscriptioData.userData.user_id':user_id}).sort({ createdAt: -1 });
     res.status(200).json({feedback});
     }catch(error){
         res.status(500).json({message:error.message});
@@ -62,7 +57,7 @@ router.get ('/show/feedback',isAuthenticated,async(req,res)=>{
 router.get('/vendor/show/feedback',isauthenticated,async(req,res)=>{
     try{
         const {Vendor_id}= req.Vendor;
-        const feedback = await Feedback.find({Vendor_id});
+        const feedback = await Feedback.find({'subscriptioData.VendorData.Vendor_id':Vendor_id}).sort({ createdAt: -1 });
         res.status(200).json({feedback});
         }catch(error){
             res.status(500).json({message:error.message,error});
