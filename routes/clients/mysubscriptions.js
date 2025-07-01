@@ -11,7 +11,7 @@ dotenv.config();
 router.get('/mysubscriptions/active', isAuthenticated, async (req, res) => {
   try {
     const subscriptions = await Subscriber.find({
-      user_id: req.user.user_id,status: "accepted",
+      'userData.user_id': req.user.user_id,status: "accepted",
       subscriptionEndDate: { $gt: new Date() }
     }).sort({ subscriptionEndDate: 1 });
 

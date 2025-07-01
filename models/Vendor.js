@@ -8,6 +8,7 @@ const subscriptionTypeSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    status:{type:String ,default:"active"},
     planDescription: {
       type: String,
       required: true,
